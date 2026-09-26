@@ -173,7 +173,7 @@ Nell'inserimento prodotti di un documento, se l'alias non esiste si propone di c
 
 `PASSEPARTOUT_HIDDEN_WAREHOUSES`: magazzini di Passepartout da **non** mostrare nei palmari (nomi separati da virgola, maiuscole ininfluenti). Per quelli non in uso ma non eliminabili, es. `Magazzino predefinito`. Vale per origine e destinazione; se l'elenco nasconde tutti i magazzini il palmare mostra un errore invece di far sparire il campo.
 
-Tutte le variabili d'ambiente del backend (database, Passepartout, frigoriferi, etichette, ascolto) sono elencate e commentate in `env.production.example`. `LISTEN_HOST=127.0.0.1` (impostata nel `docker-compose.yml`) fa ascoltare il backend solo in locale, dietro nginx: l'API non ha autenticazione.
+Tutte le variabili d'ambiente del backend (database, Passepartout, frigoriferi, etichette, ascolto) sono elencate e commentate in `env.production.example`. Il container sta nella rete Docker `cdfnet` e pubblica la porta solo su `127.0.0.1` del server (dietro nginx): l'API non ha autenticazione. `LISTEN_HOST` (facoltativa) fa ascoltare il backend su un solo indirizzo, utile con la rete host.
 
 ## 🏷️ Etichette barcode (Zebra di rete, ZPL)
 

@@ -26,6 +26,9 @@ const initDatabase = async () => {
 	await Promise.allSettled(
 		dataSources.map(async ({ name, ds }) => {
 			try {
+				// Dove e come si sta per collegare (mai la password): aiuta a capire errori di configurazione (host o password sbagliati o vuoti)
+				const options = ds.options as any;
+				LoggerHandler.log(`[database]: ${name} -> ${options.host}:${options.port}/${options.database} come "${options.username}" (password ${options.password ? "impostata" : "VUOTA"})`);
 				await ds.initialize();
 				LoggerHandler.log(`[database]: ${name} connected`);
 			} catch (err) {

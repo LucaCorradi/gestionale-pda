@@ -5,8 +5,8 @@ Backend in **Docker**, frontend statico servito da **nginx di Plesk**, database 
 ```
 palmare ──► nginx (Plesk)  pda.cdf
               ├── /        →  file statici del frontend (httpdocs)
-              └── /api/    →  127.0.0.1:8787  →  container Docker "backend"
-                                                    ├── MySQL di Plesk (127.0.0.1:3306)
+              └── /api/    →  127.0.0.1:8789  →  container Docker "backend"
+                                                    ├── MySQL del server (172.18.20.1:3306, rete Docker cdfnet)
                                                     ├── Passepartout SOAP   (192.168.0.201:7610)
                                                     ├── DB frigoriferi      (192.168.0.104:1433)
                                                     └── Stampante Zebra     (192.168.0.125:9100)
@@ -37,7 +37,10 @@ docker --version
 docker compose version     # deve funzionare "docker compose" (con lo spazio)
 ```
 
-**Dal server, la rete del negozio deve essere raggiungibile.** Il backend gira con la rete del server, quindi vale
+**La rete Docker `cdfnet` deve esistere** (è quella dell'altro gestionale sul server): `docker network ls | grep cdfnet`. Il container ci entra, e MySQL lo vede
+arrivare da un indirizzo `172.18.20.x`, che è quello per cui l'utente MySQL è autorizzato (`172.18.20.%`).
+
+**Dal server, la rete del negozio deve essere raggiungibile.** Il container esce verso la rete del negozio passando dal server, quindi vale
 quello che vede il server. Controllali da SSH (ognuno deve rispondere "ok"):
 ```
 curl -s -m 5 -o /dev/null -w "Passepartout SOAP: HTTP %{http_code}\n" "http://192.168.0.201:7610/?wsdl"
@@ -66,6 +69,8 @@ Plesk → *Siti web e domini* → *Aggiungi dominio* → `pda.cdf` (sito vuoto, 
   In `.env` metterai `CLIENT_URL=https://pda.cdf`.
 
 ## 2. Crea il database MySQL
+
+> **Se sul server c'è già il database di questo gestionale** (per esempio quello usato da un'installazione precedente) e lo vuoi riusare, salta questo passo e `init.sql`: nel `.env` metti nome, utente e password di quel database. L'utente deve essere ammesso da `172.18.20.%` (la rete `cdfnet`).
 
 1. Plesk → *Database* → *Aggiungi database*: nome es. `cdf_warehouse_pda`, e un utente dedicato con password
    (permessi solo su quel database). Segna **nome database, utente e password**: servono al passo 3.
@@ -107,20 +112,21 @@ Sul server, in una cartella **fuori dalla document root**, es. `/var/www/vhosts/
    ```
    docker compose logs -f backend
    ```
-   Devi vedere, in ordine: `DataSource connected`, `PassepartoutDataSource connected`, `FridgeDataSource connected`,
-   `Server is running at http://127.0.0.1:8787`, e dopo circa 30 secondi
+   Prima di ogni collegamento il backend scrive dove si collega e con quale utente (mai la password): controlla che il MySQL sia `172.18.20.1:3306` e che
+   la password risulti "impostata". Devi vedere, in ordine: `DataSource connected`, `PassepartoutDataSource connected`, `FridgeDataSource connected`,
+   `Server is running at http://localhost:8789`, e dopo circa 30 secondi
    `[products]: indice caricato (... articoli letti ...)`. Esci dai log con Ctrl+C (il container resta acceso).
-5. Prova l'API dal server:
+5. Controlla che la porta sia pubblicata solo in locale: `docker port pda_backend` deve mostrare `8789/tcp -> 127.0.0.1:8789`. Poi prova l'API dal server:
    ```
-   curl http://127.0.0.1:8787/api/whoami        # → I am online!
-   curl http://127.0.0.1:8787/api/departments   # → i due reparti
+   curl http://127.0.0.1:8789/api/whoami        # → I am online!
+   curl http://127.0.0.1:8789/api/departments   # → i due reparti
    ```
 
-Il container si riavvia da solo se il server viene riavviato (`restart: unless-stopped`).
+Il container si riavvia da solo se il server viene riavviato (`restart: unless-stopped`). Il container si chiama `pda_backend` (`docker logs -f pda_backend`, `docker exec -it pda_backend sh`).
 
-> **Il backend ascolta solo su `127.0.0.1`** (variabile `LISTEN_HOST` nel `docker-compose.yml`). L'API non ha
+> **La porta è pubblicata solo su `127.0.0.1`** del server (`ports: 127.0.0.1:8789:8789` nel `docker-compose.yml`). L'API non ha
 > autenticazione e può creare documenti in Passepartout: non deve essere raggiungibile dalla rete, ci arriva solo
-> nginx. Non aprire la porta 8787 nel firewall.
+> nginx. Non aprire la porta 8789 nel firewall.
 
 ## 4. Frontend
 
@@ -202,7 +208,8 @@ docker compose down                  # ferma e rimuove il container (dati e logs
 | Sintomo | Causa probabile e rimedio |
 |---|---|
 | Pagina bianca / 404 aprendo `http://pda.cdf/products` | Mancano `error_page 404 /index.html;` e `proxy_intercept_errors on;` (passo 5), o sono nella sezione HTTP/HTTPS sbagliata. |
-| **502 Bad Gateway** su `/api/...` | Il backend non risponde: `docker compose ps` e `docker compose logs backend`. Controlla che ascolti su 127.0.0.1:8787 e che nginx punti a quella porta. |
+| **502 Bad Gateway** su `/api/...` | nginx non raggiunge il backend. Controlla in ordine: (1) `docker port pda_backend` deve mostrare `8789/tcp -> 127.0.0.1:8789`: se è vuoto, sul server gira un compose senza `ports` (o quello vecchio con la rete host): sostituiscilo con quello del pacchetto e `docker compose up -d --force-recreate`; (2) `docker exec pda_backend printenv LISTEN_HOST` deve essere vuoto (se è `127.0.0.1` il backend non è raggiungibile dall'esterno del container); (3) `curl http://127.0.0.1:8789/api/whoami` dal server; (4) `proxy_pass` di nginx su `127.0.0.1:8789`; (5) `docker compose logs backend`. |
+| Nei log `Access denied for user '...'@'<indirizzo>'` (MySQL) | L'indirizzo tra apici è quello da cui MySQL vede il container: deve rientrare nei permessi dell'utente (`172.18.20.%`). Se è l'indirizzo pubblico del server, il container non è in `cdfnet` (o è in rete host). Se la password risulta VUOTA nei log, vedi sotto. |
 | Nei log `ER_ACCESS_DENIED_ERROR` (MySQL) | Utente o password del database sbagliati in `.env`, oppure l'utente non ha permessi sul database. Con password che contengono `$` ricordati il raddoppio (`$$`). |
 | Nei log `PassepartoutDataSource`/`FridgeDataSource failed` | Rete: il server non raggiunge 192.168.0.201 / 192.168.0.104 (vedi prerequisiti), o credenziali sbagliate in `.env`. |
 | Errore all'apertura del reparto: "DataSource failed to connect" | Il backend controlla tutti i database a ogni richiesta: se uno non risponde, tutte le chiamate falliscono. Guarda quale nei log. |
