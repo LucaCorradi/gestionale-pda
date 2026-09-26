@@ -1,0 +1,14 @@
+node_modules
+migrations
+dist
+.git
+.gitignore
+.claude
+.circleci
+.vscode
+.dockerignore
+Dockerfile
+docker-compose*.yml
+env
+*.md
+document.js

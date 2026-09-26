@@ -1,0 +1,8 @@
+version: '3.8'
+services:
+  backend:
+    volumes:
+      - ./src:/app/src
+      - ./migrations:/app/migrations
+      - ./package.json:/app/package.json
+      - ./appDataSource.ts:/app/appDataSource.ts

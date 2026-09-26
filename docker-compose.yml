@@ -1,0 +1,41 @@
+version: '3.8'
+services:
+  backend:
+    container_name: cdf_warehouse_pda
+    build:
+      context: .
+      dockerfile: 'Dockerfile'
+      network: host
+    environment:
+        - ENVIRONMENT=${ENVIRONMENT}
+        - PORT=${PORT}
+
+        - DB_HOST=${DB_HOST}
+        - DB_PORT=${DB_PORT}
+        - DB_NAME=${DB_NAME}
+        - DB_USER=${DB_USER}
+        - DB_PASSWORD=${DB_PASSWORD}
+
+        - FRIDGES_DB_HOST=${FRIDGES_DB_HOST}
+        - FRIDGES_DB_PORT=${FRIDGES_DB_PORT}
+        - FRIDGES_DB_NAME=${FRIDGES_DB_NAME}
+        - FRIDGES_DB_USER=${FRIDGES_DB_USER}
+        - FRIDGES_DB_PASSWORD=${FRIDGES_DB_PASSWORD}
+
+        - PASSEPARTOUT_SOAP_HOST=${PASSEPARTOUT_SOAP_HOST}
+        - PASSEPARTOUT_SOAP_PORT=${PASSEPARTOUT_SOAP_PORT}
+        - PASSEPARTOUT_SOAP_USER=${PASSEPARTOUT_SOAP_USER}
+        - PASSEPARTOUT_SOAP_PASSWORD=${PASSEPARTOUT_SOAP_PASSWORD}
+
+        - PASSEPARTOUT_DB_HOST=${PASSEPARTOUT_DB_HOST}
+        - PASSEPARTOUT_DB_PORT=${PASSEPARTOUT_DB_PORT}
+        - PASSEPARTOUT_DB_NAME=${PASSEPARTOUT_DB_NAME}
+        - PASSEPARTOUT_DB_USER=${PASSEPARTOUT_DB_USER}
+        - PASSEPARTOUT_DB_PASSWORD=${PASSEPARTOUT_DB_PASSWORD}
+
+        - CLIENT_URL=${CLIENT_URL}
+    ports:
+      - '8787:8787'
+    image: sviluppobbsway/cdf_warehouse_pda:${DOCKER_TAG}
+    restart: unless-stopped
+    network_mode: bridge

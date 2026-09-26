@@ -1,0 +1,35 @@
+{
+  "name": "warehousepda",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/index.ts",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "start": "npx tsx src/index.ts",
+    "migration:generate:develop": "tsx  -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:generate -d appDataSource.ts migrations/develop/develop",
+    "migration:generate:prod": "tsx  -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:generate -d appDataSource.ts migrations/production/production",
+    "migration:run": "tsx -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:run -d appDataSource.ts"
+  },
+  "author": "The BB's Way",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.3",
+    "tsconfig-paths": "^4.2.0",
+    "tsx": "^4.20.5",
+    "typescript": "^5.9.2"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "date-fns": "^4.1.0",
+    "express": "^5.1.0",
+    "fast-xml-parser": "^5.3.4",
+    "mssql": "^11.0.1",
+    "mysql": "^2.18.1",
+    "reflect-metadata": "^0.2.2",
+    "soap": "^1.4.1",
+    "typeorm": "^0.3.26",
+    "zod": "^4.1.11"
+  }
+}

@@ -1,0 +1,63 @@
+export type PPEmployeesResult = {
+    ContrattoPersonale: PPEmployee[];
+}
+
+export type PPEmployee = {
+    attributes: {
+        "z:Id": string;
+    };
+    IDDati: string;
+    IsParziale: [string, string];
+    UltimaModifica: string;
+    BancaAbi: string;
+    BancaBic: string | null;
+    BancaCab: string;
+    BancaCinBban: string | null;
+    BancaCinIban: string | null;
+    BancaIban: string;
+    BancaNome: string;
+    BancaNumeroConto: string;
+    BancaPaese: string;
+    Cap: string | null;
+    Cellulare: string | null;
+    CentroProduzione: string | null;
+    Cittadinanza: string;
+    CodiceFiscale: string | null;
+    CodiceMexal: string | null;
+    CodiceRete: string;
+    CodiceTessera: string | null;
+    Cognome: string | null;
+    Cortesia: string;
+    Descrizione: string | null;
+    Email: string | null;
+    Fax: string | null;
+    FinestraIniziale: string;
+    Gruppo: string;
+    IdGestionale: string;
+    Indirizzo: string | null;
+    IsAliquotaIVASpec: string;
+    IsAttivo: string;
+    IsScadenzaUtenteSpec: string;
+    Lingua: string;
+    Localita: string | null;
+    Login: string;
+    LuogoNascita: string;
+    Nazione: string;
+    NazioneNascita: string;
+    NazioneNascitaSigla: string | null;
+    NazioneSigla: string;
+    Nome: string;
+    Note: string | null;
+    Note2: string;
+    PartitaIVA: string | null;
+    Password: string;
+    PasswordChiaro: string;
+    Provincia: string | null;
+    ProvinciaNascita: string;
+    RagioneSociale: string;
+    ResetPwLogin: string;
+    Telefono: string | null;
+    Telefono2: string | null;
+    TipoChiave: string;
+    TipoChiaveEnum: string;
+};
