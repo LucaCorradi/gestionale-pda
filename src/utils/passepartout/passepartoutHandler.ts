@@ -71,7 +71,21 @@ export class PassepartoutHandler {
 
         const ppWarehouses = await soapHandler.callMethod<PPWarehousesResult>('GetMagazzini', args);
 
-        const data = ppWarehouses.string.map(warehouse => ({
+        // Configurazione: magazzini da non mostrare nei palmari (nomi separati da virgola, senza distinguere maiuscole).
+        // Servono per quelli che in Passepartout non si possono eliminare ma non sono in uso.
+        const hidden = (process.env.PASSEPARTOUT_HIDDEN_WAREHOUSES ?? '')
+            .split(',')
+            .map(name => name.trim().toLowerCase())
+            .filter(name => name.length > 0);
+
+        const visible = ppWarehouses.string.filter(warehouse => !hidden.includes(String(warehouse).trim().toLowerCase()));
+
+        // Un elenco da nascondere sbagliato non deve far sparire il campo Magazzino dal palmare: meglio un errore chiaro
+        if (hidden.length > 0 && visible.length === 0) {
+            throw new InternalServerError('Nessun magazzino da mostrare: controllare PASSEPARTOUT_HIDDEN_WAREHOUSES');
+        }
+
+        const data = visible.map(warehouse => ({
             Name: warehouse
         }));
 

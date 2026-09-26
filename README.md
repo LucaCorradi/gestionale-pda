@@ -141,28 +141,43 @@ Dupluchetei il meno possibile per evitare casini se non necessario
 
 ---
 
+## 📦 Movimenti di magazzino
+
+- **Frigorifero facoltativo** su ogni riga di prodotto (la colonna del DB interno era già nullable).
+- Nel passo *Dettagli operazione* **Operatore** e **Magazzino** (origine / destinazione) sono pulsanti; il **Fornitore** è un menu con ricerca testuale.
+
 ## 🛒 Gestione prodotti (ricerca / creazione da palmare)
 
-Dal palmare si può cercare un prodotto per alias, cercarlo per descrizione, aggiungere un alias a un articolo esistente o crearne uno nuovo in Passepartout. Nell'inserimento prodotti dei documenti, se l'alias non esiste si propone di creare l'articolo al volo.
+La pagina *Gestione prodotti* del palmare ha due sezioni:
+- **Per codice**: si scansiona o si digita un alias / codice / barcode di etichetta; compare la scheda del prodotto (nome, codice, unità, IVA, categoria, prezzo, alias) con in alto quantità e *Stampa etichetta*. Se il prodotto non esiste: "Prodotto non trovato" con la scelta tra cercarlo **per descrizione** (per associargli l'alias) o crearlo nuovo.
+- **Per descrizione**: campo di ricerca e lista completa dei risultati (fino a 100, scorrevole). Scelto un prodotto restano il nome e la stampa; toccando il nome si torna alla lista. Se si arriva da un codice non trovato compare anche *Aggiungi l'alias a questo articolo*.
 
-**Endpoint** (`/api/products/...`): `lookup` (per alias), `by-code`, `search` (per descrizione), `catalog` (IVA, unità, tipi alias, categorie), `create`, `add-alias`.
+Nell'inserimento prodotti di un documento, se l'alias non esiste si propone di creare l'articolo al volo e si prosegue con l'inserimento; toccando una riga già inserita (palmare) si apre per cambiare la quantità o eliminarla.
+
+**Nuovo articolo dal palmare**: descrizione, unità (pz / kg / L), aliquota IVA e uno o più alias. Gli alias sono sempre di tipo `Generico`; **categoria e prezzo non si chiedono** (l'articolo nasce senza categoria e a prezzo 0: li imposta l'ufficio in Passepartout).
+
+**Endpoint** (`/api/products/...`): `lookup` (per alias), `by-code`, `search` (per descrizione), `catalog` (IVA, unità, tipi alias e categorie in uso; il palmare oggi non chiede la categoria), `create`, `add-alias`.
 
 **Come funziona**
 - Tutto passa dal web service SOAP di Passepartout (`GetArticolo`, `GetArticoloAlias`, `GetArticoli`, `PutArticolo`). **Nessun accesso diretto al DB MSSQL**, né in lettura né in scrittura, per queste funzioni.
-- Ricerca per descrizione, categorie e prossimo codice usano un indice in memoria ricavato da `GetArticoli`: caricamento completo all'avvio (circa 30 secondi, in background), poi solo le modifiche recenti; ricarico completo ogni 6 ore.
+- Ricerca per descrizione (massimo 100 risultati), categorie e prossimo codice usano un indice in memoria ricavato da `GetArticoli`: caricamento completo all'avvio (circa 30 secondi, in background: la prima ricerca per descrizione o la prima creazione dopo un riavvio aspettano che finisca), poi solo le modifiche recenti; ricarico completo ogni 6 ore. Gli articoli cancellati in Passepartout restano nella ricerca fino al ricarico completo.
 - Il codice articolo va sempre passato a `PutArticolo` (Passepartout via SOAP non lo genera). Il pulsante "genera codice" di Passepartout usa un contatore interno che un articolo creato via SOAP **non** fa avanzare: per non produrre codici doppi il palmare usa un intervallo separato, `90001`-`99999` (vedi `PDA_CODE_FIRST` in `articleCatalog.ts`).
 - Gli articoli nascono con prezzo 0 su tutti i listini; il prezzo lo imposta l'ufficio. Le aliquote IVA ammesse sono in `src/utils/passepartout/article/articleCatalog.ts`.
 - Non esiste cancellazione articoli via SOAP: eventuali articoli di prova vanno eliminati a mano da Passepartout.
 
 **Registro dei prodotti creati**: una riga JSON per evento in `logs/created-products.log` (in Docker: volume `./logs:/app/logs`, percorso configurabile con `CREATED_PRODUCTS_LOG_PATH`). Non contiene l'operatore: chi crea l'articolo lo registra già Passepartout.
 
-## ⚙️ Configurazione operatori
+## ⚙️ Configurazione operatori e magazzini
 
 `PASSEPARTOUT_EMPLOYEES_GROUP` (nei file `env/.env.*`): gruppo di Passepartout da cui prendere gli operatori mostrati nei palmari. Più gruppi separati da virgola; vuoto = tutti. Se il gruppo non esiste il palmare mostra un errore invece di far sparire il campo Operatore.
 
+`PASSEPARTOUT_HIDDEN_WAREHOUSES`: magazzini di Passepartout da **non** mostrare nei palmari (nomi separati da virgola, maiuscole ininfluenti). Per quelli non in uso ma non eliminabili, es. `Magazzino predefinito`. Vale per origine e destinazione; se l'elenco nasconde tutti i magazzini il palmare mostra un errore invece di far sparire il campo.
+
+Tutte le variabili d'ambiente del backend (database, Passepartout, frigoriferi, etichette, ascolto) sono elencate e commentate in `env.production.example`. `LISTEN_HOST=127.0.0.1` (impostata nel `docker-compose.yml`) fa ascoltare il backend solo in locale, dietro nginx: l'API non ha autenticazione.
+
 ## 🏷️ Etichette barcode (Zebra di rete, ZPL)
 
-In *Gestione prodotti*, una volta trovato il prodotto (per alias o per descrizione) compare il pannello "Etichetta barcode" con la quantità di etichette e il pulsante *Stampa etichetta* (`POST /api/products/print-label`).
+In *Gestione prodotti*, una volta trovato il prodotto (per alias o per descrizione) compare una riga con la quantità di etichette e il pulsante *Stampa etichetta* (`POST /api/products/print-label`). Il numero del barcode non si mostra all'operatore.
 
 - **Barcode EAN-8** = prefisso (`LABEL_EAN8_PREFIX`, default `99`) + codice interno a 5 cifre + cifra di controllo. Esempio: codice `20882` → `99208820`. La cifra di controllo la calcola anche la stampante (`^B8`). Gli articoli con codice non a 5 cifre numeriche (es. `PLU 0085`, a peso) non hanno etichetta.
 - **Etichetta**: descrizione (da Passepartout) su due righe in alto, sotto il barcode. Misure `LABEL_WIDTH_MM` x `LABEL_HEIGHT_MM` (default 50 x 20 mm, larghezza x altezza) a `LABEL_PRINTER_DPI` (default 203). `LABEL_BARCODE_MODULE_DOTS` (default 3) regola la larghezza del barcode: 3 = circa 25 mm, 2 = circa 17 mm.

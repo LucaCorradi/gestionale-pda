@@ -10,7 +10,7 @@ import { PassepartoutHandler } from "../utils/passepartout/passepartoutHandler";
 import { logCreatedProduct } from "../utils/createdProductsLog";
 import { LoggerHandler } from "../utils/loggerHandler";
 
-const SEARCH_LIMIT = 20;
+const SEARCH_LIMIT = 100;
 const MAX_CODE_ATTEMPTS = 10;
 
 const FULL_RELOAD_MS = 6 * 60 * 60 * 1000;   // ricarico tutto ogni tanto (non arrivano le cancellazioni fatte in Passepartout)
@@ -94,7 +94,10 @@ export class ProductService {
     }
 
     public async getCatalog(): Promise<ProductCatalogResponse> {
-        await this.ensureIndex();
+        // Non si aspetta l'indice degli articoli: IVA, unità di misura e tipi di alias sono fissi, e le categorie
+        // (che il palmare non chiede più) sono quelle già caricate, se ce ne sono. Così il form si apre subito
+        // anche subito dopo un riavvio, quando l'indice è ancora in caricamento.
+        this.warmUp();
 
         const categories = [...this.categories.values()].sort((a, b) => a.Description.localeCompare(b.Description, "it"));
 

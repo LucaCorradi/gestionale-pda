@@ -95,7 +95,7 @@ Sul server, in una cartella **fuori dalla document root**, es. `/var/www/vhosts/
    ```
    Da compilare: `DB_NAME`, `DB_USER`, `DB_PASSWORD` (quelli del passo 2), `PASSEPARTOUT_SOAP_USER/PASSWORD`,
    `PASSEPARTOUT_DB_USER/PASSWORD`, `FRIDGES_DB_USER/PASSWORD` e `CLIENT_URL` (`http://pda.cdf` o `https://pda.cdf`).
-   Gli altri valori (indirizzi, stampante, misure etichette, gruppo operatori) sono già impostati: controllali.
+   Gli altri valori (indirizzi, stampante, misure etichette, gruppo operatori, magazzini da nascondere) sono già impostati: controllali. In particolare `PASSEPARTOUT_HIDDEN_WAREHOUSES=Magazzino predefinito` nasconde nei palmari i magazzini elencati (nomi separati da virgola).
    Una password con `$` va scritta con `$$`. Poi proteggi il file: `chmod 600 .env`.
 3. Crea la cartella del registro prodotti e avvia:
    ```
@@ -144,7 +144,7 @@ Da un PC o da un palmare in rete:
 1. Apri `http://pda.cdf` (o https): appare la scelta del **reparto** (Negozio / Cucina) e il pulsante *Gestione prodotti*.
 2. Da SSH, tramite nginx: `curl http://pda.cdf/api/whoami` → `I am online!`.
 3. **Operatori**: scegli un reparto e un'operazione: nell'elenco *Operatore* devono comparire solo le persone del
-   gruppo `palmarimagazzino`. Se compare un errore "Nessun operatore nel gruppo": in Passepartout ogni operatore deve
+   gruppo `palmarimagazzino`, e **Magazzino** deve mostrare i magazzini senza quelli nascosti (niente "Magazzino predefinito"). Nel carico da fornitore il campo *Fornitore* ha la ricerca testuale. Se compare un errore "Nessun operatore nel gruppo": in Passepartout ogni operatore deve
    avere la scheda *Personale* **e** essere nel gruppo (l'assegnazione al solo utente non basta).
 4. **Gestione prodotti**: scansiona un codice a barre di un prodotto esistente → compare la scheda. Prova anche una
    scansione di un'etichetta stampata (`99...`).
@@ -154,6 +154,7 @@ Da un PC o da un palmare in rete:
 
 ## Dopo la messa in servizio
 
+- **Nuovi articoli da palmare**: senza categoria e a prezzo zero (li completa l'ufficio), alias sempre di tipo `Generico`.
 - **Codici dei prodotti creati da palmare**: partono da **90001** (intervallo separato dal contatore di "genera
   codice" di Passepartout, che un articolo creato dal web service non fa avanzare). Prezzo a zero: lo imposta l'ufficio.
 - **Registro dei prodotti creati**: `pda-backend/logs/created-products.log`, una riga JSON per prodotto creato o alias
@@ -166,7 +167,7 @@ Da un PC o da un palmare in rete:
 ## Aggiornare l'app in futuro
 
 **Backend** (sul server, nella cartella con `docker-compose.yml`): sostituisci i file del codice con quelli nuovi
-(**non** toccare `.env` e `logs/`) e poi:
+(**non** toccare `.env` e `logs/`). Se la versione nuova ha variabili in più, confronta `.env` con `env.production.example` e aggiungi quelle che mancano (per esempio `PASSEPARTOUT_HIDDEN_WAREHOUSES`). Poi:
 ```
 docker compose up -d --build
 docker compose logs -f backend
@@ -184,7 +185,7 @@ npm run build:prod
 poi carica il contenuto della cartella `dist/` in `httpdocs/`, sovrascrivendo. Se il browser mostra ancora la versione
 vecchia è cache: Ctrl+Shift+R.
 
-**Modificare la configurazione** (stampante, misure etichette, gruppo operatori...): modifica `.env` e riavvia:
+**Modificare la configurazione** (stampante, misure etichette, gruppo operatori, magazzini nascosti...): modifica `.env` e riavvia:
 `docker compose up -d --force-recreate`.
 
 ## Comandi utili
@@ -205,7 +206,8 @@ docker compose down                  # ferma e rimuove il container (dati e logs
 | Nei log `ER_ACCESS_DENIED_ERROR` (MySQL) | Utente o password del database sbagliati in `.env`, oppure l'utente non ha permessi sul database. Con password che contengono `$` ricordati il raddoppio (`$$`). |
 | Nei log `PassepartoutDataSource`/`FridgeDataSource failed` | Rete: il server non raggiunge 192.168.0.201 / 192.168.0.104 (vedi prerequisiti), o credenziali sbagliate in `.env`. |
 | Errore all'apertura del reparto: "DataSource failed to connect" | Il backend controlla tutti i database a ogni richiesta: se uno non risponde, tutte le chiamate falliscono. Guarda quale nei log. |
-| Elenco categorie/IVA vuoto o "Caricamento elenchi..." lungo, subito dopo un riavvio | Il backend sta caricando l'elenco articoli da Passepartout (circa 30 secondi). Riprova dopo `indice caricato` nei log. |
+| Subito dopo un riavvio la prima ricerca per descrizione o la prima creazione di un prodotto ci mettono circa 30 secondi | Il backend sta caricando l'elenco articoli da Passepartout. Riprova dopo `indice caricato` nei log. |
+| "Nessun magazzino da mostrare" | `PASSEPARTOUT_HIDDEN_WAREHOUSES` nasconde tutti i magazzini di Passepartout: correggi l'elenco in `.env` e ricrea il container. |
 | "Nessun operatore nel gruppo ..." | Vedi punto 3 della verifica finale: scheda *Personale* + gruppo `palmarimagazzino`. |
 | "Stampante ... non raggiungibile" | Il server non arriva a 192.168.0.125:9100 (rete/firewall) oppure `LABEL_PRINTER_HOST` è sbagliato o vuoto. |
 | Etichetta tagliata o con il barcode fuori posto | Misure o risoluzione: `LABEL_WIDTH_MM`, `LABEL_HEIGHT_MM`, `LABEL_PRINTER_DPI` in `.env`, poi `docker compose up -d --force-recreate`. |
