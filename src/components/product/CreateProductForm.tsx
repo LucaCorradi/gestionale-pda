@@ -1,9 +1,8 @@
-import { ActionIcon, Alert, Button, Group, Loader, NativeSelect, SegmentedControl, Stack, Text, TextInput } from "@mantine/core"
+import { ActionIcon, Alert, Button, Group, Loader, ScrollArea, SegmentedControl, Stack, Text, TextInput } from "@mantine/core"
 import { useEffect, useState } from "react"
 import { LuPlus, LuTrash } from "react-icons/lu"
 import { httpGet, httpPost } from "../../lib/api"
-import { showError } from "../../lib/utils"
-import { CustomSelect } from "../CustomSelect"
+import { selectAllOnClick, selectAllOnFocus, showError } from "../../lib/utils"
 import { productLookupResponseSchema, type ProductLookupResponse } from "../../schemas/productLookupSchema"
 import { productCatalogResponseSchema, productCreateRequestSchema, type ProductCatalogResponse } from "../../schemas/productManageSchema"
 
@@ -14,10 +13,17 @@ type CreateProductFormProps = {
     onCancel: () => void
 }
 
-type AliasRow = { code: string, type: string }
+type AliasRow = { code: string }
 
-const DEFAULT_ALIAS_TYPE = 'Generico'
+// Dal palmare gli alias sono sempre di tipo "Generico" (e' quello usato anche per i codici a barre): il tipo non si sceglie
+const ALIAS_TYPE = 'Generico'
 
+// Mezza riga di spazio (circa metà dell'altezza di un campo) tra un alias e l'altro
+const ALIAS_GAP_PX = 18
+
+// Form compatto per creare un articolo: niente titoli ne' etichette dove il campo si capisce da solo (segnaposto, pulsanti).
+// Prezzo e categoria non si chiedono: li imposta l'ufficio in Passepartout.
+// Occupa l'altezza che gli viene data: i campi scorrono e i pulsanti Annulla / Crea prodotto restano in fondo.
 export default function CreateProductForm({ initialAlias, onCreated, onCancel }: CreateProductFormProps) {
     const [catalog, setCatalog] = useState<ProductCatalogResponse | null>(null)
     const [catalogError, setCatalogError] = useState<string | null>(null)
@@ -25,13 +31,12 @@ export default function CreateProductForm({ initialAlias, onCreated, onCancel }:
     const [name, setName] = useState('')
     const [unit, setUnit] = useState('pz')
     const [vat, setVat] = useState<string | null>(null)
-    const [category, setCategory] = useState<string | null>(null)
-    const [aliases, setAliases] = useState<AliasRow[]>([{ code: initialAlias ?? '', type: DEFAULT_ALIAS_TYPE }])
+    const [aliases, setAliases] = useState<AliasRow[]>([{ code: initialAlias ?? '' }])
 
     const [formError, setFormError] = useState<string | null>(null)
     const [submitting, setSubmitting] = useState(false)
 
-    // Elenchi (IVA, categorie, unità di misura): al primo utilizzo dopo l'avvio del server possono servire alcuni secondi
+    // Elenchi (IVA, unità di misura, tipi di alias)
     useEffect(() => {
         let cancelled = false
 
@@ -62,14 +67,10 @@ export default function CreateProductForm({ initialAlias, onCreated, onCancel }:
         return (
             <Stack align="center" py="md">
                 <Loader />
-                <Text size="sm" c="dimmed">Caricamento elenchi da Passepartout...</Text>
+                <Text size="sm" c="dimmed">Caricamento...</Text>
             </Stack>
         )
     }
-
-    const categoryOptions = catalog.Categories
-        .map((c) => ({ value: c.Code, label: c.ParentDescription ? `${c.ParentDescription} › ${c.Description}` : c.Description }))
-        .sort((a, b) => a.label.localeCompare(b.label, 'it'))
 
     const updateAlias = (index: number, patch: Partial<AliasRow>) => {
         setAliases((prev) => prev.map((a, i) => (i === index ? { ...a, ...patch } : a)))
@@ -78,7 +79,7 @@ export default function CreateProductForm({ initialAlias, onCreated, onCancel }:
     const handleSubmit = async () => {
         setFormError(null)
 
-        const cleanAliases = aliases.map((a) => ({ Code: a.code.trim(), Type: a.type })).filter((a) => a.Code.length > 0)
+        const cleanAliases = aliases.map((a) => ({ Code: a.code.trim(), Type: ALIAS_TYPE })).filter((a) => a.Code.length > 0)
 
         if (name.trim().length < 2) return setFormError('Inserisci la descrizione del prodotto')
         if (!vat) return setFormError("Seleziona l'aliquota IVA")
@@ -92,7 +93,6 @@ export default function CreateProductForm({ initialAlias, onCreated, onCancel }:
                 Name: name,
                 UnitOfMeasure: unit,
                 VatRate: vat,
-                CategoryCode: category,
                 Aliases: cleanAliases
             })
             const raw = await httpPost('/products/create', body)
@@ -112,81 +112,80 @@ export default function CreateProductForm({ initialAlias, onCreated, onCancel }:
     }
 
     return (
-        <Stack gap="sm">
-            <TextInput
-                label="Descrizione"
-                placeholder="PRODUTTORE - PRODOTTO"
-                value={name}
-                onChange={(e) => setName(e.currentTarget.value)}
-                maxLength={80}
-                data-autofocus
-            />
+        <Stack h="100%" gap="xs">
+            <ScrollArea type="auto" flex={1} mih={0}>
+                <Stack gap="xs">
+                    <TextInput
+                        aria-label="Descrizione"
+                        placeholder="PRODUTTORE - PRODOTTO"
+                        value={name}
+                        onChange={(e) => setName(e.currentTarget.value)}
+                        maxLength={80}
+                        data-autofocus
+                    />
 
-            <Stack gap={4}>
-                <Text size="sm" fw={500}>Unità di misura</Text>
-                <SegmentedControl fullWidth value={unit} onChange={setUnit} data={catalog.UnitsOfMeasure} />
-            </Stack>
+                    <SegmentedControl fullWidth aria-label="Unità di misura" value={unit} onChange={setUnit} data={catalog.UnitsOfMeasure} />
 
-            <CustomSelect
-                label="Aliquota IVA"
-                data={catalog.VatRates}
-                value={vat}
-                onChange={setVat}
-                clearable={false}
-                comboboxProps={{ keepMounted: false }}
-            />
-
-            <CustomSelect
-                label="Categoria"
-                description="Facoltativa"
-                data={categoryOptions}
-                value={category}
-                onChange={setCategory}
-                comboboxProps={{ keepMounted: false }}
-            />
-
-            <Stack gap="xs">
-                <Text size="sm" fw={500}>Alias (codici a barre e altri codici)</Text>
-                {aliases.map((alias, index) => (
-                    <Group key={index} wrap="nowrap" align="flex-end" gap="xs">
-                        <TextInput
-                            flex={1}
-                            placeholder="Codice"
-                            value={alias.code}
-                            onChange={(e) => updateAlias(index, { code: e.currentTarget.value })}
-                            maxLength={40}
-                        />
-                        <NativeSelect
-                            w={120}
-                            value={alias.type}
-                            onChange={(e) => updateAlias(index, { type: e.currentTarget.value })}
-                            data={catalog.AliasTypes}
-                        />
-                        <ActionIcon
-                            variant="light"
-                            color="red"
-                            size="lg"
-                            disabled={aliases.length === 1}
-                            onClick={() => setAliases((prev) => prev.filter((_, i) => i !== index))}
-                        >
-                            <LuTrash />
-                        </ActionIcon>
+                    {/* Aliquota IVA: pulsanti che vanno a capo da soli (5 voci non stanno su una riga sul palmare) */}
+                    <Group gap={6} role="radiogroup" aria-label="Aliquota IVA">
+                        {catalog.VatRates.map((rate) => (
+                            <Button
+                                key={rate}
+                                size="compact-sm"
+                                flex="1 1 auto"
+                                variant={vat === rate ? 'filled' : 'default'}
+                                onClick={() => setVat(rate)}
+                                role="radio"
+                                aria-checked={vat === rate}
+                            >
+                                {rate}
+                            </Button>
+                        ))}
                     </Group>
-                ))}
-                <Button
-                    variant="subtle"
-                    size="xs"
-                    leftSection={<LuPlus />}
-                    onClick={() => setAliases((prev) => [...prev, { code: '', type: DEFAULT_ALIAS_TYPE }])}
-                    disabled={aliases.length >= 10}
-                >
-                    Aggiungi alias
-                </Button>
-            </Stack>
 
-            <Text size="xs" c="dimmed">Il prezzo resta a zero: lo imposterà l'ufficio in Passepartout. Il codice prodotto viene assegnato in automatico.</Text>
+                    <Stack gap="xs">
+                        <Text size="sm" fw={500}>Alias (codici a barre e altri codici)</Text>
+                        {/* Una riga per alias: il codice occupa lo spazio e il cestino sta tutto a destra */}
+                        <Stack gap={ALIAS_GAP_PX}>
+                            {aliases.map((alias, index) => (
+                                <Group key={index} wrap="nowrap" gap="xs">
+                                    <TextInput
+                                        flex={1}
+                                        miw={0}
+                                        placeholder="Codice"
+                                        value={alias.code}
+                                        onChange={(e) => updateAlias(index, { code: e.currentTarget.value })}
+                                        onFocus={selectAllOnFocus}
+                                        onClick={selectAllOnClick}
+                                        maxLength={40}
+                                    />
+                                    <ActionIcon
+                                        variant="light"
+                                        color="red"
+                                        size="lg"
+                                        aria-label="Elimina alias"
+                                        disabled={aliases.length === 1}
+                                        onClick={() => setAliases((prev) => prev.filter((_, i) => i !== index))}
+                                    >
+                                        <LuTrash />
+                                    </ActionIcon>
+                                </Group>
+                            ))}
+                        </Stack>
+                        <Button
+                            variant="subtle"
+                            size="xs"
+                            leftSection={<LuPlus />}
+                            onClick={() => setAliases((prev) => [...prev, { code: '' }])}
+                            disabled={aliases.length >= 10}
+                        >
+                            Aggiungi alias
+                        </Button>
+                    </Stack>
+                </Stack>
+            </ScrollArea>
 
-            {formError && <Alert color="red">{formError}</Alert>}
+            {formError && <Alert color="red" p="xs">{formError}</Alert>}
 
             <Group grow>
                 <Button variant="default" onClick={onCancel} disabled={submitting}>Annulla</Button>

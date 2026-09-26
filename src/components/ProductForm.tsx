@@ -188,7 +188,6 @@ export default function ProductForm({ fridgeOptions, initialRow, editIndex, onSu
     if (creating && notFoundAlias) {
         return (
             <Stack gap="xs">
-                <Text fw={600}>Nuovo prodotto</Text>
                 <CreateProductForm
                     initialAlias={notFoundAlias}
                     onCancel={() => setCreating(false)}

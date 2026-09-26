@@ -1,8 +1,9 @@
-import { ActionIcon, Alert, Badge, Button, Card, Divider, Group, Loader, NativeSelect, ScrollArea, Stack, Text, TextInput } from "@mantine/core"
+import { ActionIcon, Alert, Badge, Button, Card, Group, Loader, NativeSelect, ScrollArea, SegmentedControl, Stack, Text, TextInput } from "@mantine/core"
 import { notifications } from "@mantine/notifications"
 import { useState } from "react"
-import { LuChevronLeft, LuSearch } from "react-icons/lu"
+import { LuChevronLeft, LuChevronsUpDown, LuSearch } from "react-icons/lu"
 import { useNavigate } from "react-router-dom"
+import { z } from "zod"
 import CreateProductForm from "../../components/product/CreateProductForm"
 import PrintLabelPanel from "../../components/product/PrintLabelPanel"
 import ProductDetailsCard from "../../components/product/ProductDetailsCard"
@@ -14,36 +15,43 @@ import {
     productAddAliasRequestSchema, productByCodeRequestSchema, productCatalogResponseSchema, productSearchRequestSchema, productSearchResponseSchema,
     type ProductSearchResponse
 } from "../../schemas/productManageSchema"
-import { z } from "zod"
 
 /*
-    Gestione prodotti:
-    1. si cerca per alias (codice a barre o altro codice)
-    2. se esiste si mostra la scheda
-    3. se non esiste si cerca per descrizione e si sceglie: aggiungere l'alias a un articolo esistente oppure crearne uno nuovo
+    Gestione prodotti, in due sezioni separate:
+    - Per codice: si cerca per alias / codice / barcode etichetta e compare la scheda con il pulsante di stampa etichetta.
+      Se non esiste si puo' cercare per descrizione (per associargli l'alias) oppure creare l'articolo.
+    - Per descrizione: campo di ricerca e lista completa dei risultati (scorrevole). Scelto un prodotto la lista sparisce e
+      restano il suo nome e la stampa; toccando il nome la lista ricompare per cambiare prodotto.
+      Se si arriva da un codice non trovato si puo' aggiungere quell'alias all'articolo scelto.
+    Tutto compatto: pensato per lo schermo piccolo del palmare.
 */
-type Stage = 'idle' | 'found' | 'notFound' | 'creating'
+type Section = 'code' | 'description'
+type CodeStatus = 'idle' | 'found' | 'notFound'
 
 const isApiError = (e: any, status: number) => e?.name === 'ApiError' && e.status === status
 
 export default function ProductManagement() {
     const navigate = useNavigate()
 
-    const [aliasInput, setAliasInput] = useState('')
-    const [alias, setAlias] = useState('')          // alias effettivamente cercato
-    const [stage, setStage] = useState<Stage>('idle')
+    const [section, setSection] = useState<Section>('code')
+    const [creating, setCreating] = useState(false)
     const [busy, setBusy] = useState(false)
 
+    // Sezione "per codice"
+    const [aliasInput, setAliasInput] = useState('')
+    const [codeStatus, setCodeStatus] = useState<CodeStatus>('idle')
     const [product, setProduct] = useState<ProductLookupResponse | null>(null)
+    // Alias cercato e non trovato: e' quello che si associa a un articolo esistente o al nuovo articolo
+    const [pendingAlias, setPendingAlias] = useState<string | null>(null)
 
-    // Ricerca per descrizione
+    // Sezione "per descrizione"
     const [query, setQuery] = useState('')
     const [results, setResults] = useState<ProductSearchResponse[] | null>(null)
     const [selected, setSelected] = useState<ProductLookupResponse | null>(null)
     const [aliasType, setAliasType] = useState('Generico')
     const [aliasTypes, setAliasTypes] = useState<string[]>(['Generico'])
 
-    const resetSearch = () => {
+    const resetDescription = () => {
         setQuery('')
         setResults(null)
         setSelected(null)
@@ -56,16 +64,17 @@ export default function ProductManagement() {
 
         try {
             setBusy(true)
-            setAlias(parsed.data.Alias)
-            resetSearch()
+            resetDescription()
 
             const raw = await httpPost('/products/lookup', parsed.data)
             setProduct(productLookupResponseSchema.parse(raw))
-            setStage('found')
+            setPendingAlias(null)
+            setCodeStatus('found')
         } catch (e: any) {
             if (isApiError(e, 404)) {
                 setProduct(null)
-                setStage('notFound')
+                setPendingAlias(parsed.data.Alias)
+                setCodeStatus('notFound')
                 loadAliasTypes()
             } else {
                 showError({ title: 'Errore durante la ricerca del prodotto', error: e })
@@ -116,19 +125,28 @@ export default function ProductManagement() {
         }
     }
 
+    // Dopo aver associato l'alias o creato l'articolo si torna alla sezione "per codice" con la scheda del prodotto
+    const showFound = (found: ProductLookupResponse) => {
+        setProduct(found)
+        setCodeStatus('found')
+        setPendingAlias(null)
+        resetDescription()
+        setCreating(false)
+        setSection('code')
+    }
+
     const addAlias = async () => {
-        if (!selected) return
+        if (!selected || !pendingAlias) return
 
         try {
             setBusy(true)
 
-            const body = productAddAliasRequestSchema.parse({ Code: selected.Code, AliasCode: alias, AliasType: aliasType })
+            const body = productAddAliasRequestSchema.parse({ Code: selected.Code, AliasCode: pendingAlias, AliasType: aliasType })
             const raw = await httpPost('/products/add-alias', body)
             const updated = productLookupResponseSchema.parse(raw)
 
-            notifications.show({ title: 'Alias aggiunto', message: `${alias} → ${updated.Name}`, color: 'green' })
-            setProduct(updated)
-            setStage('found')
+            notifications.show({ title: 'Alias aggiunto', message: `${pendingAlias} → ${updated.Name}`, color: 'green' })
+            showFound(updated)
         } catch (e: any) {
             showError({ title: "Errore durante l'aggiunta dell'alias", error: e })
         } finally {
@@ -138,149 +156,167 @@ export default function ProductManagement() {
 
     const handleCreated = (created: ProductLookupResponse) => {
         notifications.show({ title: 'Prodotto creato', message: `Codice ${created.Code} - ${created.Name}`, color: 'green' })
-        setProduct(created)
-        setStage('found')
+        showFound(created)
     }
 
-    const startNewSearch = () => {
-        setAliasInput('')
-        setAlias('')
-        setProduct(null)
-        resetSearch()
-        setStage('idle')
+    // Creazione: occupa tutta la schermata; i pulsanti Annulla / Crea prodotto stanno in fondo allo schermo
+    if (creating) {
+        return (
+            <WizardStepContainer>
+                <CreateProductForm initialAlias={pendingAlias ?? ''} onCreated={handleCreated} onCancel={() => setCreating(false)} />
+            </WizardStepContainer>
+        )
     }
 
     return (
         <WizardStepContainer>
-            <Text fw={500} c="dimmed">Gestione prodotti</Text>
+            <SegmentedControl
+                fullWidth
+                value={section}
+                onChange={(value) => setSection(value as Section)}
+                data={[{ label: 'Per codice', value: 'code' }, { label: 'Per descrizione', value: 'description' }]}
+            />
 
-            <ScrollArea type="always" offsetScrollbars flex={1}>
-                <Stack pt="md" gap="md">
+            {section === 'code' && (
+                <ScrollArea type="auto" flex={1} mt="xs">
+                    <Stack gap="xs">
+                        <TextInput
+                            aria-label="Alias, codice o barcode etichetta"
+                            placeholder="Scansiona o digita il codice"
+                            value={aliasInput}
+                            onChange={(e) => {
+                                setAliasInput(e.currentTarget.value)
+                                // Un nuovo codice nasconde il risultato precedente
+                                setCodeStatus('idle')
+                                setProduct(null)
+                            }}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                    e.preventDefault()
+                                    lookup()
+                                }
+                            }}
+                            // Al tocco si seleziona tutto: la scansione successiva sovrascrive il codice precedente
+                            onFocus={selectAllOnFocus}
+                            onClick={selectAllOnClick}
+                            maxLength={40}
+                            autoFocus
+                            rightSection={
+                                <ActionIcon onClick={lookup} type="button" loading={busy} disabled={!aliasInput.trim()}>
+                                    <LuSearch />
+                                </ActionIcon>
+                            }
+                        />
 
-                    {stage === 'creating' ? (
-                        <Stack>
-                            <Text fw={600}>Nuovo prodotto</Text>
-                            <CreateProductForm initialAlias={alias} onCreated={handleCreated} onCancel={() => setStage('notFound')} />
-                        </Stack>
+                        {codeStatus === 'found' && product && (
+                            <>
+                                {/* Stampa in alto: e' quello che serve di piu' */}
+                                <PrintLabelPanel key={product.Code} product={product} />
+                                <ProductDetailsCard product={product} />
+                            </>
+                        )}
+
+                        {codeStatus === 'notFound' && (
+                            <>
+                                <Alert color="yellow" title="Prodotto non trovato" p="xs" />
+                                <Group grow gap="xs">
+                                    <Button variant="default" onClick={() => setSection('description')}>Per descrizione</Button>
+                                    <Button onClick={() => setCreating(true)}>Crea nuovo</Button>
+                                </Group>
+                            </>
+                        )}
+                    </Stack>
+                </ScrollArea>
+            )}
+
+            {section === 'description' && (
+                // Colonna che occupa lo schermo: il campo in alto e la lista che riempie lo spazio e scorre
+                <Stack flex={1} mih={0} mt="xs" gap="xs">
+                    {pendingAlias && (
+                        <Text size="xs" c="dimmed" style={{ overflowWrap: 'anywhere' }}>Alias da associare: <b>{pendingAlias}</b></Text>
+                    )}
+
+                    {selected ? (
+                        <>
+                            {/* Prodotto scelto: restano nome e stampa. Toccando il nome ricompare la lista per cambiare scelta */}
+                            <Card withBorder p="xs" onClick={() => setSelected(null)} style={{ cursor: 'pointer', borderColor: 'var(--mantine-primary-color-filled)' }}>
+                                <Group justify="space-between" wrap="nowrap" gap="xs">
+                                    <Text size="sm" fw={600} lh={1.25} miw={0} style={{ overflowWrap: 'anywhere' }}>
+                                        {selected.Name} <Text span size="xs" c="dimmed" fw={400}>· {selected.Code}</Text>
+                                    </Text>
+                                    <LuChevronsUpDown size={18} style={{ flexShrink: 0 }} />
+                                </Group>
+                            </Card>
+
+                            <PrintLabelPanel key={selected.Code} product={selected} />
+
+                            {pendingAlias && (
+                                <Stack gap="xs">
+                                    <NativeSelect
+                                        aria-label="Tipo alias"
+                                        value={aliasType}
+                                        onChange={(e) => setAliasType(e.currentTarget.value)}
+                                        data={aliasTypes}
+                                    />
+                                    <Button onClick={addAlias} loading={busy}>Aggiungi l'alias a questo articolo</Button>
+                                </Stack>
+                            )}
+                        </>
                     ) : (
                         <>
                             <TextInput
-                                label="Alias, codice o barcode etichetta"
-                                placeholder="Scansiona o digita il codice"
-                                value={aliasInput}
-                                onChange={(e) => setAliasInput(e.currentTarget.value)}
+                                aria-label="Descrizione"
+                                placeholder="Parte del nome, es. bollinger cuvee"
+                                value={query}
+                                onChange={(e) => setQuery(e.currentTarget.value)}
                                 onKeyDown={(e) => {
                                     if (e.key === 'Enter') {
                                         e.preventDefault()
-                                        lookup()
+                                        search()
                                     }
                                 }}
-                                // Al tocco si seleziona tutto: la scansione successiva sovrascrive il codice precedente
-                                onFocus={selectAllOnFocus}
-                                onClick={selectAllOnClick}
-                                maxLength={40}
+                                maxLength={60}
                                 autoFocus
                                 rightSection={
-                                    <ActionIcon onClick={lookup} type="button" loading={busy && stage !== 'notFound'} disabled={!aliasInput.trim()}>
+                                    <ActionIcon onClick={search} type="button" disabled={query.trim().length < 2}>
                                         <LuSearch />
                                     </ActionIcon>
                                 }
                             />
 
-                            {stage === 'found' && product && (
-                                <Stack>
-                                    <ProductDetailsCard product={product} />
-                                    <PrintLabelPanel key={product.Code} product={product} />
-                                    <Button variant="default" onClick={startNewSearch}>Nuova ricerca</Button>
-                                </Stack>
+                            {busy && results === null && <Loader size="sm" />}
+
+                            {results !== null && results.length === 0 && (
+                                <Text size="sm" c="dimmed">Nessun articolo trovato.</Text>
                             )}
 
-                            {stage === 'notFound' && (
-                                <Stack>
-                                    <Alert color="yellow" title="Prodotto non trovato">
-                                        Nessun articolo ha l'alias <b>{alias}</b>.
-                                    </Alert>
+                            {results !== null && results.length > 0 && (
+                                <ScrollArea type="auto" flex={1} mih={0}>
+                                    <Stack gap={6}>
+                                        {results.map((r) => (
+                                            <Card key={r.Code} withBorder p="xs" onClick={() => select(r.Code)} style={{ cursor: 'pointer' }}>
+                                                <Group justify="space-between" wrap="nowrap" gap="xs">
+                                                    <Text size="sm" fw={600} lh={1.25} miw={0} style={{ overflowWrap: 'anywhere' }}>
+                                                        {r.Name} <Text span size="xs" c="dimmed" fw={400}>· {r.Code}</Text>
+                                                    </Text>
+                                                    {!r.IsActive && <Badge color="red" variant="light" size="xs">Non attivo</Badge>}
+                                                </Group>
+                                            </Card>
+                                        ))}
+                                    </Stack>
+                                </ScrollArea>
+                            )}
 
-                                    <Divider label="Cerca per descrizione" labelPosition="left" />
-
-                                    <TextInput
-                                        placeholder="Parte del nome, es. bollinger cuvee"
-                                        value={query}
-                                        onChange={(e) => setQuery(e.currentTarget.value)}
-                                        onKeyDown={(e) => {
-                                            if (e.key === 'Enter') {
-                                                e.preventDefault()
-                                                search()
-                                            }
-                                        }}
-                                        maxLength={60}
-                                        rightSection={
-                                            <ActionIcon onClick={search} type="button" disabled={query.trim().length < 2}>
-                                                <LuSearch />
-                                            </ActionIcon>
-                                        }
-                                    />
-
-                                    {busy && !selected && results === null && <Loader size="sm" />}
-
-                                    {results !== null && results.length === 0 && (
-                                        <Text size="sm" c="dimmed">Nessun articolo trovato con questa descrizione.</Text>
-                                    )}
-
-                                    {results !== null && results.length > 0 && (
-                                        <Stack gap="xs">
-                                            {results.map((r) => (
-                                                <Card
-                                                    key={r.Code}
-                                                    withBorder
-                                                    p="xs"
-                                                    onClick={() => select(r.Code)}
-                                                    style={{ cursor: 'pointer', borderColor: selected?.Code === r.Code ? 'var(--mantine-primary-color-filled)' : undefined }}
-                                                >
-                                                    <Group justify="space-between" wrap="nowrap">
-                                                        <Stack gap={0}>
-                                                            <Text size="sm" fw={600}>{r.Name}</Text>
-                                                            <Text size="xs" c="dimmed">Codice {r.Code}</Text>
-                                                        </Stack>
-                                                        {!r.IsActive && <Badge color="red" variant="light">Non attivo</Badge>}
-                                                    </Group>
-                                                </Card>
-                                            ))}
-                                        </Stack>
-                                    )}
-
-                                    {selected && (
-                                        <Stack>
-                                            <ProductDetailsCard product={selected} />
-                                            <PrintLabelPanel key={selected.Code} product={selected} />
-                                            <Group wrap="nowrap" align="flex-end">
-                                                <NativeSelect
-                                                    label="Tipo alias"
-                                                    w={140}
-                                                    value={aliasType}
-                                                    onChange={(e) => setAliasType(e.currentTarget.value)}
-                                                    data={aliasTypes}
-                                                />
-                                                <Button flex={1} onClick={addAlias} loading={busy}>
-                                                    Aggiungi alias {alias} a questo articolo
-                                                </Button>
-                                            </Group>
-                                        </Stack>
-                                    )}
-
-                                    <Divider label="Oppure" labelPosition="center" />
-
-                                    <Button variant="light" onClick={() => setStage('creating')} disabled={busy}>
-                                        Crea un nuovo articolo con alias {alias}
-                                    </Button>
-                                </Stack>
+                            {/* Nessun risultato adatto: si puo' creare l'articolo con l'alias non trovato */}
+                            {pendingAlias && (
+                                <Button variant="light" onClick={() => setCreating(true)} disabled={busy}>Crea nuovo articolo</Button>
                             )}
                         </>
                     )}
                 </Stack>
-            </ScrollArea>
+            )}
 
-            <Group pt="md">
+            <Group pt="xs">
                 <Button variant="default" leftSection={<LuChevronLeft />} onClick={() => navigate('/')}>Torna alla home</Button>
             </Group>
         </WizardStepContainer>

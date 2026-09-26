@@ -1,5 +1,5 @@
 import { employeeSchema, operationDetailResponseSchema, supplierSchema, warehouseSchema, type OperationDetailResponse } from "../../schemas/operationDetailSchema"
-import { Loader, NumberInput, ScrollArea, Text } from "@mantine/core"
+import { Loader, NumberInput, ScrollArea } from "@mantine/core"
 import { goToStep, truncateToStep, setSelection, setStepData, type OperationDetailsSelection } from "../wizard/wizardSlice"
 import { useDispatch, useSelector } from "react-redux"
 import { DatePickerInput } from "@mantine/dates"
@@ -16,6 +16,7 @@ import WizardStepContainer from "../../components/WizardStepContainer"
 import NavigationButtons from "../../components/NavigationButtons"
 import dayjs from "dayjs"
 import { CustomSelect } from "../../components/CustomSelect"
+import ButtonSelect from "../../components/ButtonSelect"
 
 dayjs.locale('it')
 
@@ -192,7 +193,6 @@ export default function Step3() {
 
     return (
         <WizardStepContainer>
-            <Text fw={500} c="dimmed">Compila i dettagli dell'operazione</Text>
             <ScrollArea type="always" offsetScrollbars flex={1}>
 
                 {/* Date input is always present */}
@@ -232,9 +232,9 @@ export default function Step3() {
 
                 {requireEmployee && (
                     <Controller control={control} name="employeeId" render={({ field }) => (
-                        <CustomSelect
+                        <ButtonSelect
                             label="Operatore"
-                            data={employeeOpts}
+                            data={employeeOpts ?? []}
                             value={field.value}
                             onChange={field.onChange}
                             error={errors.employeeId?.message}
@@ -246,6 +246,7 @@ export default function Step3() {
                     <Controller control={control} name="supplierId" render={({ field }) => (
                         <CustomSelect
                             label="Fornitore"
+                            searchable
                             data={supplierOpts}
                             value={field.value}
                             onChange={field.onChange}
@@ -256,9 +257,9 @@ export default function Step3() {
 
                 {requireWhFrom && (
                     <Controller control={control} name="whFromName" render={({ field }) => (
-                        <CustomSelect
+                        <ButtonSelect
                             label="Magazzino Origine"
-                            data={whFromOpts}
+                            data={whFromOpts ?? []}
                             value={field.value}
                             onChange={field.onChange}
                             error={errors.whFromName?.message}
@@ -268,9 +269,9 @@ export default function Step3() {
 
                 {requireWhTo && (
                     <Controller control={control} name="whToName" render={({ field }) => (
-                        <CustomSelect
+                        <ButtonSelect
                             label="Magazzino Destinazione"
-                            data={whToOpts}
+                            data={whToOpts ?? []}
                             value={field.value}
                             onChange={field.onChange}
                             error={errors.whToName?.message}

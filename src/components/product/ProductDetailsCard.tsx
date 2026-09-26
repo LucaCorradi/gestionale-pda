@@ -5,40 +5,39 @@ type ProductDetailsCardProps = {
     product: ProductLookupResponse
 }
 
-// Scheda di un articolo di Passepartout: serve a capire "che roba è" prima di usarlo o modificarlo
+// Scheda compatta di un articolo di Passepartout: serve solo a riconoscerlo e a controllare i dati, quindi il nome in
+// evidenza e tutto il resto in poche righe piccole (deve stare in una schermata senza scorrere).
 export default function ProductDetailsCard({ product }: ProductDetailsCardProps) {
+    const details = [
+        `cod. ${product.Code}`,
+        product.UnitOfMeasure,
+        product.VatRate ? `IVA ${product.VatRate}` : null,
+        product.Category ?? 'senza categoria',
+        product.Price,
+    ].filter(Boolean).join(' · ')
+
     return (
-        <Card withBorder radius="md" p="sm">
-            <Stack gap="xs">
-                <Group justify="space-between" wrap="nowrap" align="flex-start">
-                    <Stack gap={0}>
-                        <Text size="sm" c="dimmed">Codice {product.Code}</Text>
-                        <Text fw={600}>{product.Name}</Text>
-                    </Stack>
-                    {!product.IsActive && <Badge color="red" variant="light">Non attivo</Badge>}
+        <Card withBorder radius="md" p="xs">
+            <Stack gap={4}>
+                <Group justify="space-between" wrap="nowrap" align="flex-start" gap="xs">
+                    <Text fw={600} size="sm" lh={1.25} miw={0} style={{ overflowWrap: 'anywhere' }}>{product.Name}</Text>
+                    {!product.IsActive && <Badge color="red" variant="light" size="xs">Non attivo</Badge>}
                 </Group>
 
-                <Group gap="xs">
-                    <Badge variant="light" color="gray">U.M. {product.UnitOfMeasure}</Badge>
-                    {product.VatRate && <Badge variant="light" color="gray">IVA {product.VatRate}</Badge>}
-                    <Badge variant="light" color="gray">{product.Category ? `Categoria ${product.Category}` : 'Senza categoria'}</Badge>
-                    <Badge variant="light" color="gray">Prezzo {product.Price}</Badge>
-                </Group>
+                <Text size="xs" c="dimmed">{details}</Text>
 
-                <Stack gap={4}>
-                    <Text size="xs" c="dimmed" fw={600}>Alias</Text>
-                    {product.Aliases.length === 0 ? (
-                        <Text size="sm" c="dimmed">Nessun alias</Text>
-                    ) : (
-                        <Group gap="xs">
-                            {product.Aliases.map((alias) => (
-                                <Badge key={`${alias.Code}-${alias.Type}`} variant="outline" tt="none">
-                                    {alias.Code} · {alias.Type}
-                                </Badge>
-                            ))}
-                        </Group>
-                    )}
-                </Stack>
+                {product.Aliases.length === 0 ? (
+                    <Text size="xs" c="dimmed">Nessun alias</Text>
+                ) : (
+                    <Group gap={4}>
+                        {product.Aliases.map((alias) => (
+                            <Badge key={`${alias.Code}-${alias.Type}`} variant="outline" size="xs" tt="none">
+                                {/* Il tipo si scrive solo quando non e' il solito "Generico" */}
+                                {alias.Type === 'Generico' ? alias.Code : `${alias.Code} (${alias.Type})`}
+                            </Badge>
+                        ))}
+                    </Group>
+                )}
             </Stack>
         </Card>
     )

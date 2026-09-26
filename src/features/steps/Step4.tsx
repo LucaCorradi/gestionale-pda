@@ -77,6 +77,11 @@ export default function Step4() {
         setItems((prev) => prev.filter((_, i) => i !== index))
     }
 
+    // Cambio rapido della quantita' dalla scheda aperta (palmare)
+    const handleQuantityChange = (index: number, quantity: number) => {
+        setItems((prev) => prev.map((it, i) => (i === index ? { ...it, quantity } : it)))
+    }
+
 
     // On submit, save in store and navigate
     const onSubmit = () => {
@@ -114,6 +119,7 @@ export default function Step4() {
                             openModal()
                         }}
                         onDelete={(index) => { handleRemoveItem(index) }}
+                        onQuantityChange={handleQuantityChange}
                     />
                 )}
             </ScrollArea>

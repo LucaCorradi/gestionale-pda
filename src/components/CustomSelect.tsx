@@ -11,9 +11,12 @@ type CustomSelectProps = {
     clearable?: boolean
     error?: React.ReactNode
     comboboxProps?: SelectProps['comboboxProps']
+    // Di default la ricerca testuale c'e' solo sui dispositivi non touch (sul palmare aprirebbe la tastiera a ogni tocco):
+    // con `searchable` si forza anche sul palmare, per le liste lunghe (es. i fornitori)
+    searchable?: boolean
 }
 
-export const CustomSelect = ({ data, value, onChange, label, description, disabled, clearable = true, error, comboboxProps }: CustomSelectProps) => {
+export const CustomSelect = ({ data, value, onChange, label, description, disabled, clearable = true, error, comboboxProps, searchable }: CustomSelectProps) => {
     const isTouchDevice = useMediaQuery('(pointer: coarse)')
 
     return (
@@ -31,7 +34,8 @@ export const CustomSelect = ({ data, value, onChange, label, description, disabl
 
             error={error}
 
-            searchable={!isTouchDevice}
+            searchable={searchable ?? !isTouchDevice}
+            nothingFoundMessage="Nessun risultato"
         />
     )
 

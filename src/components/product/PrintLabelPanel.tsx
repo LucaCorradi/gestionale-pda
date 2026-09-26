@@ -1,4 +1,4 @@
-import { Button, Card, Group, NumberInput, Stack, Text } from "@mantine/core"
+import { Button, Group, NumberInput, Text } from "@mantine/core"
 import { notifications } from "@mantine/notifications"
 import { useState } from "react"
 import { LuPrinter } from "react-icons/lu"
@@ -13,7 +13,8 @@ type PrintLabelPanelProps = {
 
 const MAX_COPIES = 100
 
-// Stampa delle etichette barcode (EAN-8) per i prodotti che non ne hanno uno. Il barcode è ricavato dal codice interno.
+// Riga compatta per stampare le etichette barcode (EAN-8) di un prodotto: quantita' e pulsante. Il numero del barcode
+// non si mostra: all'operatore non serve e ruba spazio (lo calcola il backend dal codice interno).
 export default function PrintLabelPanel({ product }: PrintLabelPanelProps) {
     const [copies, setCopies] = useState<number | string>(1)
     const [printing, setPrinting] = useState(false)
@@ -33,7 +34,7 @@ export default function PrintLabelPanel({ product }: PrintLabelPanelProps) {
 
             notifications.show({
                 title: 'Etichette inviate alla stampante',
-                message: `${result.Copies} × ${result.Barcode}`,
+                message: `${result.Copies} × ${product.Name}`,
                 color: 'green'
             })
         } catch (e: any) {
@@ -43,37 +44,32 @@ export default function PrintLabelPanel({ product }: PrintLabelPanelProps) {
         }
     }
 
-    return (
-        <Card withBorder radius="md" p="sm">
-            <Stack gap="xs">
-                <Text size="xs" c="dimmed" fw={600}>Etichetta barcode</Text>
+    if (!product.LabelBarcode) {
+        return (
+            <Text size="xs" c="dimmed">
+                Etichetta non disponibile: il codice {product.Code} non è di 5 cifre (es. articoli a peso).
+            </Text>
+        )
+    }
 
-                {product.LabelBarcode ? (
-                    <>
-                        <Text size="sm">Barcode EAN-8: <b>{product.LabelBarcode}</b></Text>
-                        <Group wrap="nowrap" align="flex-end">
-                            <NumberInput
-                                label="Quantità etichette"
-                                w={140}
-                                value={copies}
-                                onChange={setCopies}
-                                min={1}
-                                max={MAX_COPIES}
-                                allowDecimal={false}
-                                allowNegative={false}
-                                error={validCopies ? undefined : `Da 1 a ${MAX_COPIES}`}
-                            />
-                            <Button flex={1} leftSection={<LuPrinter />} onClick={handlePrint} loading={printing} disabled={!validCopies}>
-                                Stampa etichetta
-                            </Button>
-                        </Group>
-                    </>
-                ) : (
-                    <Text size="sm" c="dimmed">
-                        Non disponibile: il codice {product.Code} non è di 5 cifre numeriche (per esempio gli articoli a peso), quindi non si può ricavare il barcode.
-                    </Text>
-                )}
-            </Stack>
-        </Card>
+    return (
+        <Group wrap="nowrap" gap="xs">
+            <NumberInput
+                aria-label="Numero di etichette"
+                w={92}
+                prefix="× "
+                value={copies}
+                onChange={setCopies}
+                min={1}
+                max={MAX_COPIES}
+                allowDecimal={false}
+                allowNegative={false}
+                hideControls
+                error={!validCopies}
+            />
+            <Button flex={1} miw={0} leftSection={<LuPrinter />} onClick={handlePrint} loading={printing} disabled={!validCopies}>
+                Stampa etichetta
+            </Button>
+        </Group>
     )
 }
