@@ -1,6 +1,6 @@
 import { type DepartmentResponse, departmentResponseSchema } from "../../schemas/departmentSchema"
 import { goToStep, setSelection, setStepData, truncateToStep } from "../wizard/wizardSlice"
-import { Alert, Group, Radio, ScrollArea, Stack, Text } from "@mantine/core"
+import { Alert, Button, Group, Radio, ScrollArea, Stack, Text } from "@mantine/core"
 import { httpGet, httpPost } from "../../lib/api"
 import { useEffect, useState } from "react"
 import { showError } from "../../lib/utils"
@@ -130,6 +130,7 @@ export default function Step1() {
                     </Stack>
                 </Radio.Group>
             </ScrollArea>
+            <Button variant="light" mb="xs" onClick={() => navigate('/products')}>Gestione prodotti</Button>
             <NavigationButtons onNavigateNext={handleSubmit} nextDisabled={!selectedDepartmentId || posting} />
         </WizardStepContainer>
     )

@@ -24,6 +24,7 @@ export default function Header() {
                 {import.meta.env.VITE_DEBUG === 'true' && (
                     <Button variant="light" onClick={() => console.warn(fullState)}>Print cache</Button>
                 )}
+                <Anchor component={Link} to="/products">Prodotti</Anchor>
                 <Anchor component={Link} to="/charts">Grafici</Anchor>
             </Group>
         </Group>

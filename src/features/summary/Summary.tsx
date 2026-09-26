@@ -55,7 +55,8 @@ export default function Summary() {
             const productsPayload = products.map((p) => operationConfirmProductSchema.parse({
                 Code: p.code,
                 Quantity: typeof p.quantity === 'string' ? Number(p.quantity) : p.quantity,
-                FridgeUUID: p.fridgeUUID
+                // Il frigorifero è facoltativo: senza selezione il campo non viene inviato
+                FridgeUUID: p.fridgeUUID || undefined
             }))
 
             const payload: OperationConfirmRequest = operationConfirmRequestSchema.parse({

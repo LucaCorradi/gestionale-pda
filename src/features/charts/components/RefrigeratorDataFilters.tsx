@@ -28,14 +28,14 @@ export default function RefrigeratorDataFilters({ loading, onSubmitRequested }: 
 
     // Product lookup
     const doLookup = async () => {
-        const aliasNum = Number(productInput)
-        if (!aliasNum || Number.isNaN(aliasNum)) return
+        const alias = productInput.trim()
+        if (!alias) return
 
         try {
             setIsLookingUp(true)
             setLookupOk(false)
 
-            const body: ProductLookupRequest = productLookupRequestSchema.parse({ Alias: aliasNum })
+            const body: ProductLookupRequest = productLookupRequestSchema.parse({ Alias: alias })
             const raw = await httpPost('/products/lookup', body)
             const data = productLookupResponseSchema.parse(raw) as ProductLookupResponse
 

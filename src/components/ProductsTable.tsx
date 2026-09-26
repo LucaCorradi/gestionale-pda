@@ -24,7 +24,7 @@ export default function ProductsTable({ products, onEdit, onDelete }: ProductsTa
                             <Text size="sm">{product.quantity} {product.unitOfMeasure}</Text>
                         </Group>
                         <Text size="sm" fw={600}>{product.name}</Text>
-                        <Text size="sm">{product.fridgeDescription}</Text>
+                        <Text size="sm">{product.fridgeDescription || '-'}</Text>
                     </Stack>
                 </Card>
             ))}
@@ -49,7 +49,7 @@ export default function ProductsTable({ products, onEdit, onDelete }: ProductsTa
                         <Table.Td><Text size="sm">{product.code}</Text></Table.Td>
                         <Table.Td><Text size="sm">{product.name}</Text></Table.Td>
                         <Table.Td><Text size="sm">{product.quantity} {product.unitOfMeasure}</Text></Table.Td>
-                        <Table.Td><Text size="sm">{product.fridgeDescription}</Text></Table.Td>
+                        <Table.Td><Text size="sm">{product.fridgeDescription || '-'}</Text></Table.Td>
                         {canDelete && <Table.Td><ActionIcon variant="light" color="red" onClick={(e) => {
                             e.preventDefault()
                             e.stopPropagation()

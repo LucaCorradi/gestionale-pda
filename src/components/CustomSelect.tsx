@@ -6,13 +6,14 @@ type CustomSelectProps = {
     value: string | null
     onChange: (value: string | null, option: ComboboxItem) => void
     label?: string
+    description?: React.ReactNode
     disabled?: boolean
     clearable?: boolean
     error?: React.ReactNode
     comboboxProps?: SelectProps['comboboxProps']
 }
 
-export const CustomSelect = ({ data, value, onChange, label, disabled, clearable = true, error, comboboxProps }: CustomSelectProps) => {
+export const CustomSelect = ({ data, value, onChange, label, description, disabled, clearable = true, error, comboboxProps }: CustomSelectProps) => {
     const isTouchDevice = useMediaQuery('(pointer: coarse)')
 
     return (
@@ -21,6 +22,7 @@ export const CustomSelect = ({ data, value, onChange, label, disabled, clearable
             value={value}
             onChange={onChange}
             label={label}
+            description={description}
             placeholder={data.length ? `Seleziona ${label}` : `Nessun ${label} disponibile`}
             comboboxProps={comboboxProps}
 

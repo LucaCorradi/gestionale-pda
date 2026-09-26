@@ -16,6 +16,17 @@ export const showError = ({ title: errorTitle, error, showUser = true, autoClose
 }
 
 
+// Per i campi dove si scansiona un codice: al tocco si seleziona tutto il testo, così la scansione successiva lo sovrascrive.
+// Serve sia onFocus (primo tocco) sia onClick (campo già attivo, dove il focus non scatta di nuovo); nel focus si attende un attimo
+// perché alcuni browser mobili spostano il cursore subito dopo e annullerebbero la selezione.
+export const selectAllOnFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+    const input = e.currentTarget
+    setTimeout(() => input.select(), 0)
+}
+export const selectAllOnClick = (e: React.MouseEvent<HTMLInputElement>) => {
+    e.currentTarget.select()
+}
+
 export const toDate = (v: unknown) => {
     if (v == null || v === '') return null
     if (v instanceof Date) return v
