@@ -1,3 +1,20 @@
+export interface PPAlias {
+    Codice: string;
+    TipoEnum: string;
+}
+
+export interface PPVatRate {
+    Codice: string;
+    Descrizione?: string;
+    Percentuale: number;
+}
+
+export interface PPCategory {
+    Codice: string;
+    Descrizione: string;
+    Padre?: PPCategory | null;
+}
+
 export interface PPProductResult {
     attributes: {
         "z:Id": string;
@@ -5,9 +22,11 @@ export interface PPProductResult {
     IDDati: string;
     IsParziale: [boolean, boolean];
     UltimaModifica: string;
-    Alias: any;
 
-    // AliquotaIVA: AliquotaIVA;
+    // Senza alias è una stringa vuota; con un solo alias la libreria soap può restituire un oggetto invece di un array
+    Alias: "" | { PMBAlias?: PPAlias | PPAlias[] } | null;
+
+    AliquotaIVA?: PPVatRate | null;
 
     AllegatoNome: string;
     AttivaLotto: boolean;
@@ -17,7 +36,7 @@ export interface PPProductResult {
     CatStatCodice: string;
     CatStatDescrizione: string;
 
-    // Categoria: Categoria;
+    Categoria?: PPCategory | null;
 
     Codice: string;
     ColoreSfondo: number;

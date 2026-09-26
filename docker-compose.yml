@@ -1,41 +1,23 @@
-version: '3.8'
+# Backend PDA in Docker. Pensato per un server Plesk con MySQL locale: vedi GUIDA-DEPLOY.md.
+#
+#   cp env.production.example .env      # poi compila i valori
+#   docker compose up -d --build
+#
+# network_mode: host = il container usa la rete del server: raggiunge il MySQL locale (127.0.0.1) e le macchine
+# della rete del negozio (Passepartout, stampante etichette, DB frigoriferi) esattamente come un processo normale,
+# senza toccare bind-address o permessi utente su MySQL. Con questa modalità "ports" non serve.
 services:
   backend:
     container_name: cdf_warehouse_pda
-    build:
-      context: .
-      dockerfile: 'Dockerfile'
-      network: host
-    environment:
-        - ENVIRONMENT=${ENVIRONMENT}
-        - PORT=${PORT}
-
-        - DB_HOST=${DB_HOST}
-        - DB_PORT=${DB_PORT}
-        - DB_NAME=${DB_NAME}
-        - DB_USER=${DB_USER}
-        - DB_PASSWORD=${DB_PASSWORD}
-
-        - FRIDGES_DB_HOST=${FRIDGES_DB_HOST}
-        - FRIDGES_DB_PORT=${FRIDGES_DB_PORT}
-        - FRIDGES_DB_NAME=${FRIDGES_DB_NAME}
-        - FRIDGES_DB_USER=${FRIDGES_DB_USER}
-        - FRIDGES_DB_PASSWORD=${FRIDGES_DB_PASSWORD}
-
-        - PASSEPARTOUT_SOAP_HOST=${PASSEPARTOUT_SOAP_HOST}
-        - PASSEPARTOUT_SOAP_PORT=${PASSEPARTOUT_SOAP_PORT}
-        - PASSEPARTOUT_SOAP_USER=${PASSEPARTOUT_SOAP_USER}
-        - PASSEPARTOUT_SOAP_PASSWORD=${PASSEPARTOUT_SOAP_PASSWORD}
-
-        - PASSEPARTOUT_DB_HOST=${PASSEPARTOUT_DB_HOST}
-        - PASSEPARTOUT_DB_PORT=${PASSEPARTOUT_DB_PORT}
-        - PASSEPARTOUT_DB_NAME=${PASSEPARTOUT_DB_NAME}
-        - PASSEPARTOUT_DB_USER=${PASSEPARTOUT_DB_USER}
-        - PASSEPARTOUT_DB_PASSWORD=${PASSEPARTOUT_DB_PASSWORD}
-
-        - CLIENT_URL=${CLIENT_URL}
-    ports:
-      - '8787:8787'
-    image: sviluppobbsway/cdf_warehouse_pda:${DOCKER_TAG}
+    build: .
     restart: unless-stopped
-    network_mode: bridge
+    network_mode: host
+    env_file: .env
+    environment:
+      NODE_ENV: production
+      # L'API non ha autenticazione: ascolta solo su localhost, ci arriva nginx (vedi nginx-plesk.conf)
+      LISTEN_HOST: 127.0.0.1
+      CREATED_PRODUCTS_LOG_PATH: /app/logs/created-products.log
+    volumes:
+      # Registro dei prodotti creati da palmare: sta fuori dal container per non perderlo a ogni ricostruzione
+      - ./logs:/app/logs

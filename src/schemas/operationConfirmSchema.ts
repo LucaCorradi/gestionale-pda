@@ -6,7 +6,8 @@ import { z } from "zod";
 const operationConfirmProductSchema = z.object({
     Code: z.string().nonempty(),
     Quantity: z.number().positive(),
-    FridgeUUID: z.uuid()
+    // Il frigorifero è facoltativo: non tutti i movimenti riguardano merce tenuta in frigo
+    FridgeUUID: z.uuid().nullish()
 });
 export type OperationConfirmProductRequest = z.infer<typeof operationConfirmProductSchema>;
 

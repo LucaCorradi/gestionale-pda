@@ -13,7 +13,9 @@ export const dataSource: DataSource = new DataSource({
     username: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
-    entities: [__dirname + "/../**/*Entity.ts"],
+    // Solo le entità di questo progetto. Il vecchio percorso "/../**" cercava in tutta la cartella superiore
+    // (in Docker: nell'intero file system) e caricava anche copie del progetto rimaste accanto.
+    entities: [__dirname + "/src/models/*Entity.ts"],
     synchronize: false,
     timezone: "local",
     // logging: process.env.ENVIRONMENT === "LOCAL",

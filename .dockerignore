@@ -4,7 +4,6 @@ dist
 .git
 .gitignore
 .claude
-.circleci
 .vscode
 .dockerignore
 Dockerfile
@@ -12,3 +11,9 @@ docker-compose*.yml
 env
 *.md
 document.js
+
+logs
+.env
+sql
+nginx-plesk.conf
+env.production.example

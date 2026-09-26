@@ -14,6 +14,7 @@ import { dataSource } from "../appDataSource";
 import { fridgeDataSource } from "../fridgeDataSource";
 import { passepartoutDataSource } from "../passepartoutDataSource";
 import { databaseMiddleware } from "./middlewares/databaseMiddleware";
+import { productService } from "./services/productService";
 
 const dataSources = [
 	{ name: "DataSource", ds: dataSource },
@@ -93,11 +94,19 @@ const initServer = (app: Express) => {
 
 	const httpServer = http.createServer(app);
 
-	httpServer.listen(port, () => {
+	// LISTEN_HOST=127.0.0.1 fa ascoltare solo in locale (dietro nginx): l'API non ha autenticazione e non deve essere raggiungibile dalla rete
+	const listenHost = process.env.LISTEN_HOST?.trim();
+	const onListening = () => {
 		LoggerHandler.log(
-			`[server]: Server is running at http://localhost:${port}`,
+			`[server]: Server is running at http://${listenHost || "localhost"}:${port}`,
 		);
-	});
+	};
+
+	if (listenHost) {
+		httpServer.listen(port, listenHost, onListening);
+	} else {
+		httpServer.listen(port, onListening);
+	}
 
 	httpServer.on("error", (error: Error) => {
 		LoggerHandler.error(`[server]: Error: ${error}`);
@@ -117,6 +126,9 @@ const init = async () => {
 		const app = initApp();
 
 		initServer(app);
+
+		// Carica in background l'elenco categorie (serve alla creazione prodotti, richiede circa 30 secondi)
+		productService.warmUp();
 	} catch (e: any) {
 		LoggerHandler.error(e.message);
 	}

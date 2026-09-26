@@ -43,7 +43,11 @@ export class SOAPHandler {
         return this.client;
     }
 
-    public async callMethod<T>(methodName: string, args: SOAPArgs): Promise<T> {
+    /**
+     * Come callMethod, ma restituisce null quando il servizio risponde con un risultato vuoto
+     * (es. GetArticoloAlias su un alias che non esiste) invece di lanciare un errore.
+     */
+    public async callMethodNullable<T>(methodName: string, args: SOAPArgs): Promise<T | null> {
         const client = await this.getClient();
         const asyncMethod = client[`${methodName}Async` as keyof Client] as Function;
 
@@ -53,14 +57,27 @@ export class SOAPHandler {
 
         const [res] = await asyncMethod(args);
         if (res == null) {
-            throw new InternalServerError(`SOAP method ${methodName} returned null result`);
+            return null;
         }
 
         const resultKey = `${methodName}Result`;
         return resultKey in res ? res[resultKey] : res;
     }
 
-    public async callMethodRaw<T>(methodName: string, xmlBody: string): Promise<T> {
+    public async callMethod<T>(methodName: string, args: SOAPArgs): Promise<T> {
+        const result = await this.callMethodNullable<T>(methodName, args);
+        if (result == null) {
+            throw new InternalServerError(`SOAP method ${methodName} returned null result`);
+        }
+
+        return result;
+    }
+
+    /**
+     * Invia una busta SOAP costruita a mano e restituisce il testo XML della risposta, senza interpretarlo.
+     * Serve quando bisogna rileggere e rimandare un contratto intero (es. articolo) senza perdere campi.
+     */
+    public async callMethodRawText(methodName: string, xmlBody: string): Promise<string> {
         const response = await fetch(this.soapEndpoint, {
             method: 'POST',
             headers: {
@@ -73,10 +90,18 @@ export class SOAPHandler {
         if (!response.ok) {
             const errorText = await response.text();
             console.error('SOAP Error Response:', errorText);
-            throw new InternalServerError(`SOAP method ${methodName} failed: ${response.status}`);
+
+            // Passepartout descrive l'errore di validazione nel faultstring: lo giro al chiamante
+            const fault = errorText.match(/<faultstring[^>]*>([\s\S]*?)<\/faultstring>/)?.[1];
+            const detail = fault ? fault.replace(/&#xD;/g, ' ').replace(/\s+/g, ' ').trim() : '';
+            throw new InternalServerError(`SOAP method ${methodName} failed: ${response.status}${detail ? ` - ${detail}` : ''}`);
         }
 
-        const xmlResponse = await response.text();
+        return await response.text();
+    }
+
+    public async callMethodRaw<T>(methodName: string, xmlBody: string): Promise<T> {
+        const xmlResponse = await this.callMethodRawText(methodName, xmlBody);
 
         const parser = new XMLParser({
             ignoreAttributes: true,

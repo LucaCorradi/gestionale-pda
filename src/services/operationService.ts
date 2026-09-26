@@ -111,7 +111,7 @@ export class OperationService {
 		for (const ppDocumentRow of ppDocument.Products) {
 			const operationRow: OperationRow = new OperationRow();
 			operationRow.ProductCode = ppDocumentRow.Code;
-			operationRow.FridgeUUID = ppDocumentRow.FridgeUUID;
+			operationRow.FridgeUUID = ppDocumentRow.FridgeUUID ?? null;
 			operationRow.Quantity = ppDocumentRow.Quantity;
 			operationRow.Operation = savedOperation;
 			await this.operationRowRepository.save(operationRow);

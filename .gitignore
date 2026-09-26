@@ -3,3 +3,6 @@ migrations
 .vscode
 CLAUDE.md
 .claude
+logs
+.env
+env/
