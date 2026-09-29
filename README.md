@@ -60,3 +60,24 @@ La pagina deve restare nello schermo del palmare (320-412 px di larghezza) senza
 
 ## Deploy
 Vedi `GUIDA-DEPLOY.md` nel repository del backend: il frontend compilato (`dist/`) va copiato nella document root del sito, il backend gira in Docker.
+
+## Compatibilità con palmari datati ("aggiorna WebView")
+Vite di suo compila per browser recenti (`<script type="module">`, sintassi JS moderna): sui palmari con
+la Android System WebView vecchia — specie quelli senza Play Store per aggiornarla — la pagina non parte
+e Android mostra "aggiorna WebView" invece di caricarla.
+
+`vite.config.ts` usa **`@vitejs/plugin-legacy`**: ogni build produce, oltre al bundle moderno, un secondo
+bundle transpilato ed espanso con i polyfill (`*-legacy-*.js`), caricato automaticamente dai browser che
+non supportano `<script type="module">` (vedi lo script di rilevamento in `dist/index.html`). I palmari
+aggiornati continuano a scaricare solo il bundle moderno, più leggero: non cambia nulla per loro.
+
+Questo risolve la sintassi JS non supportata, **non il CSS**: Mantine 8 usa funzionalità CSS recenti
+(livelli, `:where()`, a volte container query). Se un palmare molto vecchio carica la pagina ma il layout
+è rotto, il problema è il motore di rendering della WebView, non più risolvibile da qui: serve aggiornare
+la WebView di sistema sul dispositivo (sideload dell'APK se non c'è Play Store) o sostituire il dispositivo.
+
+**Verificato sul campo:** su un palmare datato il bundle legacy non è bastato a far funzionare l'app dentro
+l'app kiosk (che usa una propria WebView interna, probabilmente ancora più indietro/limitata di quella di
+sistema). Aprendo lo stesso indirizzo in **Chrome** installato sul dispositivo funziona: per quel palmare
+la soluzione adottata è usare Chrome al posto del contenitore kiosk. Il plugin legacy resta comunque utile
+per gli altri dispositivi con WebView di sistema datata (quella verificata funzionare).
