@@ -23,6 +23,8 @@ export const productLookupResponseSchema = z.object({
 	IsActive: z.boolean().default(true),
 	// EAN-8 dell'etichetta; null se il codice non è di 5 cifre (es. articoli a peso "PLU 0085")
 	LabelBarcode: z.string().nullable().default(null),
+	// Quantità letta da un barcode a quantità variabile; null per ogni altra ricerca
+	Quantity: z.number().nullable().default(null),
 	Aliases: z.array(productAliasSchema).default([])
 });
 export type ProductLookupResponse = z.infer<typeof productLookupResponseSchema>;

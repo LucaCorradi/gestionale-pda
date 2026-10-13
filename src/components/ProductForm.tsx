@@ -113,6 +113,9 @@ export default function ProductForm({ fridgeOptions, initialRow, editIndex, onSu
         // Set last used fridge for this product
         if (data.FridgeUUID && !getValues('fridgeUUID')) setValue('fridgeUUID', data.FridgeUUID, { shouldValidate: true })
 
+        // Barcode a quantità variabile: la quantità stampata sull'etichetta precompila il campo
+        if (data.Quantity !== null) setValue('quantity', data.Quantity, { shouldValidate: true })
+
         lookedUpAlias.current = alias
         setNotFoundAlias(null)
         setLookupOk(true)
