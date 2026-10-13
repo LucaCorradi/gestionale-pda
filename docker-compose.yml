@@ -31,6 +31,8 @@ services:
     volumes:
       # Registro dei prodotti creati da palmare: sta fuori dal container per non perderlo a ogni ricostruzione
       - ./logs:/app/logs
+      # Formati dei barcode a quantità variabile: si modifica il JSON sul server e si vede alla scansione successiva, senza ricostruire
+      - ./config:/app/config
 
 networks:
   cdfnet:

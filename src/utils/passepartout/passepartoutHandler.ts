@@ -10,6 +10,8 @@ import { buildPPDocument, buildPutDocumentoXml } from "./document/documentHandle
 import { escapeXml } from "./article/articleXml";
 import { getEanPrefix } from "../labels/labelConfig";
 import { productCodeFromBarcode, productEan8 } from "../labels/ean8";
+import { parseVariableBarcode } from "../labels/variableBarcode";
+import { LoggerHandler } from "../loggerHandler";
 import { GetDocumentiResult, PPDocument, PPDocumentTypeEnum } from "./document/documentTypes";
 import { PPEmployeesResult } from "./types/employeeTypes";
 import { PPProductResult } from "./types/productTypes";
@@ -134,6 +136,7 @@ export class PassepartoutHandler {
             Category: product.Categoria?.Descrizione ?? null,
             IsActive: product.IsAttivo,
             LabelBarcode: PassepartoutHandler.labelBarcode(product.Codice),
+            Quantity: null,
             Aliases: aliases
         };
     }
@@ -152,8 +155,39 @@ export class PassepartoutHandler {
     }
 
     /**
+     * Barcode a quantità variabile (config/barcode-variabili.json): ricava il codice articolo dal barcode, cerca l'articolo
+     * e restituisce anche la quantità letta. null se non è un barcode di quel tipo o l'articolo non c'è.
+     */
+    private static async findProductByVariableBarcode(scanned: string): Promise<ProductLookupResponse | null> {
+        const parsed = parseVariableBarcode(scanned);
+        if (!parsed) return null;
+
+        for (const mode of parsed.format.ricerca) {
+            let product: ProductLookupResponse | null = null;
+
+            if (mode === "codice") {
+                product = await PassepartoutHandler.findProductByCode(parsed.code);
+            } else {
+                // Gli zeri iniziali servono solo a riempire le cifre del barcode: l'alias del PLU bilancia è senza zeri
+                const plu = parsed.code.replace(/^0+/, "");
+                if (plu) {
+                    const found = await PassepartoutHandler.findProductByAlias(plu);
+                    const tipo = parsed.format.tipoAlias;
+                    if (found && (!tipo || found.Aliases.some(a => a.Code === plu && a.Type === tipo))) product = found;
+                }
+            }
+
+            if (product) return { ...product, Quantity: parsed.quantity };
+        }
+
+        LoggerHandler.warn(`[barcode-variabili]: ${scanned} riconosciuto come "${parsed.format.nome}" ma nessun articolo per il codice ${parsed.code}`);
+        return null;
+    }
+
+    /**
      * Risolve un valore digitato o letto con lo scanner. Nell'ordine:
      * 1. alias esatto di un articolo
+     * 1b. barcode a quantità variabile (formati in config/barcode-variabili.json), con la quantità già letta
      * 2. barcode delle nostre etichette (prefisso + codice a 5 cifre + controllo): Passepartout lo riconosce alla cassa
      *    come formato speciale, ma il web service no, quindi si ricava il codice prodotto da qui
      * 3. codice prodotto diretto
@@ -165,6 +199,9 @@ export class PassepartoutHandler {
 
         const byAlias = await PassepartoutHandler.findProductByAlias(value);
         if (byAlias) return byAlias;
+
+        const byVariable = await PassepartoutHandler.findProductByVariableBarcode(value);
+        if (byVariable) return byVariable;
 
         let labelCode: string | null = null;
         try {
