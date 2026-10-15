@@ -70,7 +70,8 @@ export function buildPPDocument(request: OperationConfirmRequest, operationType:
         Codice: p.Code,
         // NoMovMag: operationType == OperationTypeName.SPOSTAMENTO_MAGAZZINO,
 
-        Quantita: p.Quantity.toFixed(2),
+        // 3 decimali: le etichette a peso variabile portano i grammi (1,252 kg), con 2 si perderebbero
+        Quantita: p.Quantity.toFixed(3),
 
         Magazzino: "",
 

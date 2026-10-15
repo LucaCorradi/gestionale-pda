@@ -4,7 +4,7 @@ import { z } from "zod";
 import { LoggerHandler } from "../loggerHandler";
 
 /*
-    Barcode a quantità variabile (es. teglia di lasagne etichettata: 299 + 00451 + 0300 + controllo).
+    Barcode a quantità variabile (es. teglia di lasagne etichettata: 98 + 00451 + 01250 + controllo = 1,250 kg).
     Passepartout li riconosce alla cassa con la sua "impostazione codici a barre", ma il web service no: qui si scompone il
     codice letto secondo i formati descritti in un file JSON (BARCODE_VARIABILI_FILE, di default config/barcode-variabili.json).
     Il file si rilegge a ogni scansione: una modifica si vede subito, senza riavviare.
