@@ -1,10 +1,11 @@
 import { ActionIcon, Alert, Badge, Button, Card, Group, Loader, NativeSelect, ScrollArea, SegmentedControl, Stack, Text, TextInput } from "@mantine/core"
 import { notifications } from "@mantine/notifications"
 import { useState } from "react"
-import { LuChevronLeft, LuChevronsUpDown, LuSearch } from "react-icons/lu"
+import { LuChevronLeft, LuChevronsUpDown, LuPlus, LuSearch } from "react-icons/lu"
 import { useNavigate } from "react-router-dom"
 import { z } from "zod"
 import CreateProductForm from "../../components/product/CreateProductForm"
+import EditProductForm from "../../components/product/EditProductForm"
 import PrintLabelPanel from "../../components/product/PrintLabelPanel"
 import ProductDetailsCard from "../../components/product/ProductDetailsCard"
 import WizardStepContainer from "../../components/WizardStepContainer"
@@ -23,6 +24,7 @@ import {
     - Per descrizione: campo di ricerca e lista completa dei risultati (scorrevole). Scelto un prodotto la lista sparisce e
       restano il suo nome e la stampa; toccando il nome la lista ricompare per cambiare prodotto.
       Se si arriva da un codice non trovato si puo' aggiungere quell'alias all'articolo scelto.
+    In entrambe toccando la scheda del prodotto si modificano descrizione, prezzo, IVA e categoria.
     Tutto compatto: pensato per lo schermo piccolo del palmare.
 */
 type Section = 'code' | 'description'
@@ -35,6 +37,7 @@ export default function ProductManagement() {
 
     const [section, setSection] = useState<Section>('code')
     const [creating, setCreating] = useState(false)
+    const [editing, setEditing] = useState<ProductLookupResponse | null>(null)
     const [busy, setBusy] = useState(false)
 
     // Sezione "per codice"
@@ -159,6 +162,23 @@ export default function ProductManagement() {
         showFound(created)
     }
 
+    // Dopo la modifica si torna dove si era, con i dati aggiornati
+    const handleSaved = (updated: ProductLookupResponse) => {
+        notifications.show({ title: 'Prodotto modificato', message: `${updated.Code} - ${updated.Name}`, color: 'green' })
+        if (product?.Code === updated.Code) setProduct(updated)
+        if (selected?.Code === updated.Code) setSelected(updated)
+        setResults((prev) => prev?.map((r) => (r.Code === updated.Code ? { ...r, Name: updated.Name } : r)) ?? null)
+        setEditing(null)
+    }
+
+    if (editing) {
+        return (
+            <WizardStepContainer>
+                <EditProductForm product={editing} onSaved={handleSaved} onCancel={() => setEditing(null)} />
+            </WizardStepContainer>
+        )
+    }
+
     // Creazione: occupa tutta la schermata; i pulsanti Annulla / Crea prodotto stanno in fondo allo schermo
     if (creating) {
         return (
@@ -212,7 +232,7 @@ export default function ProductManagement() {
                             <>
                                 {/* Stampa in alto: e' quello che serve di piu' */}
                                 <PrintLabelPanel key={product.Code} product={product} />
-                                <ProductDetailsCard product={product} />
+                                <ProductDetailsCard product={product} onEdit={() => setEditing(product)} />
                             </>
                         )}
 
@@ -249,6 +269,7 @@ export default function ProductManagement() {
                             </Card>
 
                             <PrintLabelPanel key={selected.Code} product={selected} />
+                            <ProductDetailsCard product={selected} onEdit={() => setEditing(selected)} />
 
                             {pendingAlias && (
                                 <Stack gap="xs">
@@ -316,8 +337,10 @@ export default function ProductManagement() {
                 </Stack>
             )}
 
-            <Group pt="xs">
+            <Group pt="xs" grow gap="xs">
                 <Button variant="default" leftSection={<LuChevronLeft />} onClick={() => navigate('/')}>Torna alla home</Button>
+                {/* Creazione diretta, senza passare da una ricerca (se c'e' un codice non trovato lo propone come alias) */}
+                <Button leftSection={<LuPlus />} onClick={() => setCreating(true)} disabled={busy}>Nuovo prodotto</Button>
             </Group>
         </WizardStepContainer>
     )

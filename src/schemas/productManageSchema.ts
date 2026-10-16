@@ -18,12 +18,25 @@ export const productCreateRequestSchema = z.object({
     UnitOfMeasure: z.string().nonempty(),
     VatRate: z.string().nonempty(),
     CategoryCode: z.string().nonempty().nullable().optional(),
+    SalePrice: z.number().min(0).nullable().optional(),
+    // Facoltativi: l'articolo si può creare anche senza alias
     Aliases: z.array(z.object({
         Code: z.string().trim().min(1).max(40),
         Type: z.string().nonempty()
-    })).min(1).max(10)
+    })).max(10)
 });
 export type ProductCreateRequest = z.infer<typeof productCreateRequestSchema>;
+
+export const productUpdateRequestSchema = z.object({
+    Code: z.string().trim().min(1).max(40),
+    Name: z.string().trim().min(2).max(80),
+    VatRate: z.string().nonempty(),
+    CategoryCode: z.string().nonempty().nullable(),
+    SalePrice: z.number().min(0),
+    // Elenco completo degli alias voluti
+    Aliases: z.array(z.string().trim().min(1).max(40)).max(20)
+});
+export type ProductUpdateRequest = z.infer<typeof productUpdateRequestSchema>;
 
 export const productAddAliasRequestSchema = z.object({
     Code: z.string().trim().min(1).max(40),
