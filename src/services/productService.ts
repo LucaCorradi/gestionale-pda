@@ -3,9 +3,9 @@ import { ConflictError } from "../errors/conflict";
 import { InternalServerError } from "../errors/internalServer";
 import { NotFoundError } from "../errors/notFound";
 import { ProductLookupResponse } from "../schemas/productLookupSchema";
-import { ProductAddAliasRequest, ProductCatalogResponse, ProductCreateRequest, ProductSearchResponse } from "../schemas/productManageSchema";
+import { ProductAddAliasRequest, ProductCatalogResponse, ProductCreateRequest, ProductSearchResponse, ProductUpdateRequest } from "../schemas/productManageSchema";
 import { ALIAS_TYPE_NAMES, ARTICLE_CODE_LENGTH, PDA_CODE_FIRST, PDA_CODE_LAST, UNITS_OF_MEASURE, VAT_RATES } from "../utils/passepartout/article/articleCatalog";
-import { ArticleSummary, CategoryEntry, addAliasToBody, buildNewArticleXml, extractArticleBody, extractArticleIndex, wrapArticleBody } from "../utils/passepartout/article/articleXml";
+import { ArticleChanges, ArticleSummary, CategoryEntry, addAliasToBody, applyArticleChanges, buildNewArticleXml, extractArticleBody, extractArticleIndex, wrapArticleBody } from "../utils/passepartout/article/articleXml";
 import { PassepartoutHandler } from "../utils/passepartout/passepartoutHandler";
 import { logCreatedProduct } from "../utils/createdProductsLog";
 import { LoggerHandler } from "../utils/loggerHandler";
@@ -16,6 +16,9 @@ const MAX_CODE_ATTEMPTS = 10;
 const FULL_RELOAD_MS = 6 * 60 * 60 * 1000;   // ricarico tutto ogni tanto (non arrivano le cancellazioni fatte in Passepartout)
 const DELTA_MIN_INTERVAL_MS = 60 * 1000;     // tra una ricerca e l'altra non rileggo più di una volta al minuto
 const DELTA_MARGIN_MS = 5 * 60 * 1000;       // margine per differenze di orologio tra server e Passepartout
+
+// Stessi codici, senza badare a ordine e ripetizioni (lo stesso codice può comparire con due tipi diversi)
+const sameCodes = (a: string[], b: string[]) => a.every(c => b.includes(c)) && b.every(c => a.includes(c));
 
 const normalize = (text: string) => text.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
 
@@ -94,10 +97,14 @@ export class ProductService {
     }
 
     public async getCatalog(): Promise<ProductCatalogResponse> {
-        // Non si aspetta l'indice degli articoli: IVA, unità di misura e tipi di alias sono fissi, e le categorie
-        // (che il palmare non chiede più) sono quelle già caricate, se ce ne sono. Così il form si apre subito
-        // anche subito dopo un riavvio, quando l'indice è ancora in caricamento.
-        this.warmUp();
+        // Le categorie si ricavano dall'indice degli articoli: di solito è già in memoria e il form si apre subito.
+        // Solo appena riavviato il backend si aspetta il primo caricamento (circa 30 secondi); se fallisce il form
+        // si apre lo stesso, senza categorie.
+        if (this.categories.size === 0) {
+            await this.ensureIndex().catch(() => undefined);
+        } else {
+            this.warmUp();
+        }
 
         const categories = [...this.categories.values()].sort((a, b) => a.Description.localeCompare(b.Description, "it"));
 
@@ -186,23 +193,14 @@ export class ProductService {
             // Rileggo le novità di Passepartout: potrebbe essere stato creato qualcosa da poco (ufficio o altro palmare)
             await this.sync(true);
 
-            let category: CategoryEntry | null = null;
-            if (request.CategoryCode) {
-                category = this.categories.get(request.CategoryCode) ?? null;
-                if (!category) {
-                    throw new BadRequestError(`Categoria sconosciuta: ${request.CategoryCode}`);
-                }
-            }
+            const category = request.CategoryCode ? this.getCategory(request.CategoryCode) : null;
 
             // Prima di scrivere: nessuno degli alias deve già esistere e la descrizione deve essere nuova
             for (const alias of aliases) {
                 await this.assertAliasFree(alias.code);
             }
 
-            const sameName = [...this.articles.values()].find(a => normalize(a.Name) === normalize(request.Name));
-            if (sameName) {
-                throw new ConflictError(`Esiste già un articolo con questa descrizione (codice ${sameName.Code})`, { Code: sameName.Code, Name: sameName.Name });
-            }
+            this.assertNameFree(request.Name);
 
             const code = await this.nextArticleCode();
 
@@ -212,12 +210,13 @@ export class ProductService {
                 unit: request.UnitOfMeasure,
                 vat,
                 category,
+                price: request.SalePrice ?? 0,
                 aliases
             }));
 
             // Passepartout risponde vuoto: rileggo l'articolo per essere sicuro che sia stato creato
-            const created = await PassepartoutHandler.findProductByAlias(aliases[0].code);
-            if (!created || created.Code !== code) {
+            const created = await PassepartoutHandler.findProductByCode(code);
+            if (!created) {
                 throw new InternalServerError(`L'articolo ${code} è stato inviato ma non risulta in Passepartout: controllare a mano`);
             }
 
@@ -230,12 +229,115 @@ export class ProductService {
                 unitOfMeasure: created.UnitOfMeasure,
                 vatRate: vat.Code,
                 category: category ? category.Description : null,
+                salePrice: request.SalePrice ?? null,
                 aliases: aliases.map(a => ({ code: a.code, type: a.type }))
             });
             LoggerHandler.log(`[products]: creato articolo ${code} - ${created.Name}`);
 
             return created;
         });
+    }
+
+    public async updateProduct(request: ProductUpdateRequest): Promise<ProductLookupResponse> {
+        const vat = VAT_RATES.find(v => v.Code === request.VatRate);
+        if (!vat) {
+            throw new BadRequestError(`Aliquota IVA non valida: ${request.VatRate}`);
+        }
+
+        return this.runExclusive(async () => {
+            const current = await this.getByCode(request.Code);
+
+            // Si scrive solo ciò che è cambiato: il resto dell'articolo torna a Passepartout com'era
+            const changes: ArticleChanges = {};
+            const logChanges: Record<string, { from: string | number | null; to: string | number | null }> = {};
+
+            if (request.Name !== current.Name) {
+                await this.ensureIndex();
+                this.assertNameFree(request.Name, current.Code);
+                changes.name = request.Name;
+                logChanges.name = { from: current.Name, to: request.Name };
+            }
+            if (vat.Code !== current.VatRate) {
+                changes.vat = vat;
+                logChanges.vatRate = { from: current.VatRate, to: vat.Code };
+            }
+            if (request.CategoryCode !== current.CategoryCode) {
+                if (request.CategoryCode) await this.ensureIndex();
+                changes.category = request.CategoryCode ? this.getCategory(request.CategoryCode) : null;
+                logChanges.category = { from: current.Category, to: changes.category?.Description ?? null };
+            }
+            if (request.SalePrice.toFixed(2) !== current.SalePrice.toFixed(2)) {
+                changes.price = request.SalePrice;
+                logChanges.salePrice = { from: current.SalePrice, to: request.SalePrice };
+            }
+
+            if (new Set(request.Aliases).size !== request.Aliases.length) {
+                throw new BadRequestError("Alias duplicati nella richiesta");
+            }
+            const currentAliases = current.Aliases.map(a => a.Code);
+            const keep = currentAliases.filter(c => request.Aliases.includes(c));
+            const added = request.Aliases.filter(c => !currentAliases.includes(c));
+            if (added.length > 0 || keep.length !== currentAliases.length) {
+                for (const alias of added) {
+                    await this.assertAliasFree(alias, current.Code);
+                }
+                changes.aliases = { keep, add: added.map(code => ({ code, type: "Generico" as const })) };
+                logChanges.aliases = { from: currentAliases.join(", ") || null, to: request.Aliases.join(", ") || null };
+            }
+
+            if (Object.keys(logChanges).length === 0) {
+                return current;
+            }
+
+            // Rileggo l'articolo intero e lo rimando con i campi cambiati: PutArticolo sostituisce tutto il contratto
+            const xml = await PassepartoutHandler.getArticleXml(request.Code);
+            if (!xml) {
+                throw new NotFoundError("Product not found");
+            }
+
+            const { body, code } = extractArticleBody(xml);
+            if (code !== request.Code) {
+                throw new InternalServerError(`Letto l'articolo ${code} invece di ${request.Code}`);
+            }
+
+            await PassepartoutHandler.putArticle(wrapArticleBody(applyArticleChanges(body, changes)));
+
+            // Passepartout risponde vuoto: rileggo e controllo che ogni campo cambiato sia arrivato
+            const updated = await this.getByCode(code);
+            const notApplied = [
+                changes.name !== undefined && updated.Name !== changes.name ? "descrizione" : null,
+                changes.vat !== undefined && updated.VatRate !== changes.vat.Code ? "IVA" : null,
+                changes.category !== undefined && updated.CategoryCode !== (changes.category?.Code ?? null) ? "categoria" : null,
+                changes.price !== undefined && updated.SalePrice.toFixed(2) !== changes.price.toFixed(2) ? "prezzo" : null,
+                changes.aliases !== undefined && !sameCodes(updated.Aliases.map(a => a.Code), request.Aliases) ? "alias" : null,
+            ].filter(Boolean);
+            if (notApplied.length > 0) {
+                throw new InternalServerError(`Modifica inviata ma in Passepartout non risulta: ${notApplied.join(", ")}. Controllare a mano l'articolo ${code}`);
+            }
+
+            this.articles.set(code, { Code: code, Name: updated.Name, IsActive: updated.IsActive });
+
+            await logCreatedProduct({ event: "updated", code, name: updated.Name, changes: logChanges });
+            LoggerHandler.log(`[products]: modificato articolo ${code} (${Object.keys(logChanges).join(", ")})`);
+
+            return updated;
+        });
+    }
+
+    private getCategory(categoryCode: string): CategoryEntry {
+        const category = this.categories.get(categoryCode);
+        if (!category) {
+            throw new BadRequestError(`Categoria sconosciuta: ${categoryCode}`);
+        }
+        return category;
+    }
+
+    // La descrizione deve essere unica (senza distinguere maiuscole e accenti); `ownCode` è l'articolo che si sta modificando
+    private assertNameFree(name: string, ownCode?: string): void {
+        const sameName = [...this.articles.values()].find(a => a.Code !== ownCode && normalize(a.Name) === normalize(name));
+        if (sameName) {
+            throw new ConflictError(`Esiste già un articolo con questa descrizione (codice ${sameName.Code})`, { Code: sameName.Code, Name: sameName.Name });
+        }
     }
 
     public async addAlias(request: ProductAddAliasRequest): Promise<ProductLookupResponse> {

@@ -2,11 +2,13 @@ import { z } from "zod";
 import { ALIAS_TYPE_NAMES, UNITS_OF_MEASURE } from "../utils/passepartout/article/articleCatalog";
 
 /*
-    Ricerca, creazione e aggiunta alias per gli articoli (le lookup per alias stanno in productLookupSchema).
+    Ricerca, creazione, modifica e aggiunta alias per gli articoli (le lookup per alias stanno in productLookupSchema).
 */
 
 const aliasCodeSchema = z.string().trim().min(1).max(40);
 const aliasTypeSchema = z.enum(ALIAS_TYPE_NAMES);
+// Prezzo di vendita IVA inclusa, in euro
+const salePriceSchema = z.number().min(0).max(99999).multipleOf(0.01);
 
 /*
     REQUEST
@@ -26,12 +28,26 @@ export const productCreateRequestSchema = z.object({
     UnitOfMeasure: z.enum(UNITS_OF_MEASURE),
     VatRate: z.string().trim().min(1),
     CategoryCode: z.string().trim().min(1).nullable().optional(),
+    // Facoltativo: senza prezzo l'articolo nasce a 0 e lo imposta l'ufficio
+    SalePrice: salePriceSchema.nullable().optional(),
     Aliases: z.array(z.object({
         Code: aliasCodeSchema,
         Type: aliasTypeSchema.default("Generico")
-    })).min(1).max(10)
+    })).max(10).default([])
 });
 export type ProductCreateRequest = z.infer<typeof productCreateRequestSchema>;
+
+// Modifica dei dati principali: si mandano sempre tutti, il backend scrive solo quelli cambiati
+export const productUpdateRequestSchema = z.object({
+    Code: z.string().trim().min(1).max(40),
+    Name: z.string().trim().min(2).max(80),
+    VatRate: z.string().trim().min(1),
+    CategoryCode: z.string().trim().min(1).nullable(),
+    SalePrice: salePriceSchema,
+    // Elenco completo degli alias voluti: quelli che mancano si tolgono, i nuovi si aggiungono di tipo Generico
+    Aliases: z.array(aliasCodeSchema).max(20)
+});
+export type ProductUpdateRequest = z.infer<typeof productUpdateRequestSchema>;
 
 export const productAddAliasRequestSchema = z.object({
     Code: z.string().trim().min(1).max(40),

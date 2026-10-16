@@ -3,7 +3,7 @@ import path from "path";
 import { LoggerHandler } from "./loggerHandler";
 
 /*
-    Registro dei prodotti creati (o modificati con nuovi alias) da palmare.
+    Registro dei prodotti creati o modificati (dati principali, nuovi alias) da palmare.
     Una riga JSON per evento, così è leggibile a occhio e facile da rielaborare.
     Non contiene l'operatore: chi ha creato l'articolo lo registra già Passepartout (utente del web service).
 */
@@ -16,7 +16,15 @@ export type CreatedProductLogEntry =
         unitOfMeasure: string;
         vatRate: string;
         category: string | null;
+        salePrice: number | null;
         aliases: { code: string; type: string }[];
+    }
+    | {
+        event: "updated";
+        code: string;
+        name: string;
+        // solo i campi cambiati, con valore precedente e nuovo
+        changes: Record<string, { from: string | number | null; to: string | number | null }>;
     }
     | {
         event: "alias-added";

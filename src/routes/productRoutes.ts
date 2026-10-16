@@ -6,6 +6,7 @@ import {
     ProductByCodeRequest, productByCodeRequestSchema,
     ProductCreateRequest, productCreateRequestSchema,
     ProductSearchRequest, productSearchRequestSchema, productSearchResponseSchema,
+    ProductUpdateRequest, productUpdateRequestSchema,
     ProductPrintLabelRequest, productPrintLabelRequestSchema, productPrintLabelResponseSchema,
     productCatalogResponseSchema
 } from '../schemas/productManageSchema';
@@ -68,6 +69,15 @@ productRoutes.post('/create', inputValidationMiddleware(productCreateRequestSche
     try {
         const payload = req.body as ProductCreateRequest;
         res.json(await withLastFridge(await productService.createProduct(payload)));
+    } catch (error) {
+        next(error);
+    }
+});
+
+productRoutes.post('/update', inputValidationMiddleware(productUpdateRequestSchema), outputValidationMiddleware(productLookupResponseSchema), async (req, res, next) => {
+    try {
+        const payload = req.body as ProductUpdateRequest;
+        res.json(await withLastFridge(await productService.updateProduct(payload)));
     } catch (error) {
         next(error);
     }

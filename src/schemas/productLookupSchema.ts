@@ -21,9 +21,12 @@ export const productLookupResponseSchema = z.object({
 	Name: z.string().nonempty(),
 	UnitOfMeasure: z.string().nonempty(),
 	Price: z.string().nonempty(),
+	// Lo stesso prezzo come numero (IVA inclusa), per il form di modifica
+	SalePrice: z.number(),
 	FridgeUUID: z.string().nullable(),
 	VatRate: z.string().nullable(),
 	Category: z.string().nullable(),
+	CategoryCode: z.string().nullable(),
 	IsActive: z.boolean(),
 	// EAN-8 dell'etichetta (prefisso + codice interno + controllo); null se il codice non è di 5 cifre (es. articoli a peso "PLU 0085")
 	LabelBarcode: z.string().nullable(),

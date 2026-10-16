@@ -154,18 +154,20 @@ La pagina *Gestione prodotti* del palmare ha due sezioni:
 
 Nell'inserimento prodotti di un documento, se l'alias non esiste si propone di creare l'articolo al volo e si prosegue con l'inserimento; toccando una riga già inserita (palmare) si apre per cambiare la quantità o eliminarla.
 
-**Nuovo articolo dal palmare**: descrizione, unità (pz / kg / L), aliquota IVA e uno o più alias. Gli alias sono sempre di tipo `Generico`; **categoria e prezzo non si chiedono** (l'articolo nasce senza categoria e a prezzo 0: li imposta l'ufficio in Passepartout).
+**Nuovo articolo dal palmare**: descrizione, prezzo di vendita IVA inclusa, aliquota IVA, categoria, unità (pz / kg / L) e alias. Prezzo, categoria e alias sono facoltativi (senza prezzo l'articolo nasce a 0, senza alias si trova per codice o descrizione). Gli alias sono sempre di tipo `Generico`.
 
-**Endpoint** (`/api/products/...`): `lookup` (per alias), `by-code`, `search` (per descrizione), `catalog` (IVA, unità, tipi alias e categorie in uso; il palmare oggi non chiede la categoria), `create`, `add-alias`.
+**Modifica articolo dal palmare**: toccando la scheda del prodotto trovato (per codice o per descrizione) si cambiano descrizione, prezzo di vendita, aliquota IVA, categoria e alias (si tolgono e si aggiungono come nella creazione: quelli che restano mantengono il loro tipo, i nuovi sono `Generico`). Il backend rilegge l'articolo da Passepartout, cambia solo i campi modificati e lo rimanda intero (`PutArticolo` sostituisce tutto il contratto); poi lo rilegge e segnala errore se un campo non risulta cambiato. Il prezzo va nel campo `Prezzo` dell'articolo e nella voce del listino **Vendita**; gli altri listini non si toccano. L'unità di misura non si modifica da qui. In *Gestione prodotti* il pulsante *Nuovo prodotto* (in fondo, accanto a *Torna alla home*) apre direttamente la creazione.
+
+**Endpoint** (`/api/products/...`): `lookup` (per alias), `by-code`, `search` (per descrizione), `catalog` (IVA, unità, tipi alias e categorie in uso), `create`, `update`, `add-alias`.
 
 **Come funziona**
 - Tutto passa dal web service SOAP di Passepartout (`GetArticolo`, `GetArticoloAlias`, `GetArticoli`, `PutArticolo`). **Nessun accesso diretto al DB MSSQL**, né in lettura né in scrittura, per queste funzioni.
 - Ricerca per descrizione (massimo 100 risultati), categorie e prossimo codice usano un indice in memoria ricavato da `GetArticoli`: caricamento completo all'avvio (circa 30 secondi, in background: la prima ricerca per descrizione o la prima creazione dopo un riavvio aspettano che finisca), poi solo le modifiche recenti; ricarico completo ogni 6 ore. Gli articoli cancellati in Passepartout restano nella ricerca fino al ricarico completo.
 - Il codice articolo va sempre passato a `PutArticolo` (Passepartout via SOAP non lo genera). Il pulsante "genera codice" di Passepartout usa un contatore interno che un articolo creato via SOAP **non** fa avanzare: per non produrre codici doppi il palmare usa un intervallo separato, `90001`-`99999` (vedi `PDA_CODE_FIRST` in `articleCatalog.ts`).
-- Gli articoli nascono con prezzo 0 su tutti i listini; il prezzo lo imposta l'ufficio. Le aliquote IVA ammesse sono in `src/utils/passepartout/article/articleCatalog.ts`.
+- Gli articoli nascono con il prezzo indicato (o 0) sul listino Vendita e 0 sugli altri listini, che imposta l'ufficio. Le aliquote IVA ammesse sono in `src/utils/passepartout/article/articleCatalog.ts`.
 - Non esiste cancellazione articoli via SOAP: eventuali articoli di prova vanno eliminati a mano da Passepartout.
 
-**Registro dei prodotti creati**: una riga JSON per evento in `logs/created-products.log` (in Docker: volume `./logs:/app/logs`, percorso configurabile con `CREATED_PRODUCTS_LOG_PATH`). Non contiene l'operatore: chi crea l'articolo lo registra già Passepartout.
+**Registro dei prodotti creati e modificati**: una riga JSON per evento (`created`, `updated` con valori prima/dopo, `alias-added`) in `logs/created-products.log` (in Docker: volume `./logs:/app/logs`, percorso configurabile con `CREATED_PRODUCTS_LOG_PATH`). Non contiene l'operatore: chi crea l'articolo lo registra già Passepartout.
 
 ## ⚙️ Configurazione operatori e magazzini
 

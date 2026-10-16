@@ -160,11 +160,12 @@ Da un PC o da un palmare in rete:
 
 ## Dopo la messa in servizio
 
-- **Nuovi articoli da palmare**: senza categoria e a prezzo zero (li completa l'ufficio), alias sempre di tipo `Generico`.
+- **Nuovi articoli da palmare**: prezzo di vendita (IVA inclusa), categoria e alias facoltativi; quello che manca lo completa l'ufficio. Alias sempre di tipo `Generico`.
+- **Modifica articoli da palmare**: toccando la scheda del prodotto si cambiano descrizione, prezzo di vendita, IVA, categoria e alias. Il prezzo va sul listino **Vendita** (e sul prezzo dell'articolo); gli altri listini non si toccano.
 - **Codici dei prodotti creati da palmare**: partono da **90001** (intervallo separato dal contatore di "genera
-  codice" di Passepartout, che un articolo creato dal web service non fa avanzare). Prezzo a zero: lo imposta l'ufficio.
-- **Registro dei prodotti creati**: `pda-backend/logs/created-products.log`, una riga JSON per prodotto creato o alias
-  aggiunto. Non contiene l'operatore (lo registra già Passepartout).
+  codice" di Passepartout, che un articolo creato dal web service non fa avanzare).
+- **Registro dei prodotti creati**: `pda-backend/logs/created-products.log`, una riga JSON per prodotto creato, modificato
+  (con i valori prima e dopo) o alias aggiunto. Non contiene l'operatore (lo registra già Passepartout).
 - **Articoli di prova**: se ne crei durante i test, elimina a mano da Passepartout (via web service non si possono
   cancellare).
 - **Backup**: il database segue i backup Plesk dei database. Aggiungi ai backup anche `pda-backend/` (contiene `.env`
