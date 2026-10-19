@@ -1,0 +1,13 @@
+[
+  {
+    "nome": "Peso variabile 98 (prefisso 2 cifre + codice 5 cifre + quantita 5 cifre con 3 decimali + controllo EAN-13)",
+    "campi": [
+      { "tipo": "prefisso", "cifre": 2, "valore": "98" },
+      { "tipo": "codice", "cifre": 5 },
+      { "tipo": "quantita", "cifre": 5, "decimali": 3 },
+      { "tipo": "controllo", "cifre": 1 }
+    ],
+    "ricerca": ["codice", "aliasSenzaZeri"],
+    "tipoAlias": "PLUBilance"
+  }
+]
