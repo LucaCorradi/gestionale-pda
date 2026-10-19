@@ -84,7 +84,8 @@ Il frontend in sviluppo chiama `http(s)://<host da cui si apre la pagina>:8787/a
   nel viewport: non toglierli.
 
 **Grafica: linee guida del brand, come in gestionale-code.** Solo i colori di `styles/brand-tokens.css`, riportati in
-`theme.ts` come tavolozze Mantine (miele primario con testo cacao, grigi di Mantine sostituiti dai neutri caldi) e in
+`theme.ts` come tavolozze Mantine (**cacao primario con testo bianco**, scelto dal titolare per la leggibilità sui palmari al posto
+del miele; grigi di Mantine sostituiti dai neutri caldi; pulsanti-icona disattivati in cacao attenuato, `index.css`) e in
 `brandCssVariables` (fondo avorio, testo cacao, link caramello, varianti light/outline leggibili). Restano di Mantine i colori
 di **stato** (red, yellow, green degli avvisi) e quelli delle serie nel grafico dei frigoriferi (`getColorFor`). Quando
 cambia il file del brand: ricopiare `tokens.css` e aggiornare gli esadecimali in `theme.ts`.

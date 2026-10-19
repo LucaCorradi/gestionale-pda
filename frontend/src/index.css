@@ -11,7 +11,7 @@
     }
 }
 
-/* Scelta di reparto e operazione: come le schede di gestionale-code (fondo bianco, filetto, scelta in cacao su miele chiaro) */
+/* Scelta di reparto e operazione: come le schede di gestionale-code (fondo bianco, filetto, scelta in cacao su camel chiaro) */
 .radiocard__root {
     position: relative;
     padding: var(--mantine-spacing-md);
@@ -21,7 +21,7 @@
 
     &[data-checked] {
         border-color: var(--cdf-cacao);
-        background-color: var(--cdf-miele-80);
+        background-color: var(--cdf-camel-80);
     }
 }
 .radiocard__root:hover {
@@ -35,7 +35,7 @@
     color: var(--cdf-cacao);
 }
 
-/* Focus visibile del brand: 2 px cacao (Mantine userebbe il miele, poco visibile sull'avorio) */
+/* Focus visibile del brand: 2 px cacao */
 .mantine-focus-auto:focus-visible,
 .mantine-focus-always:focus {
     outline-color: var(--cdf-cacao);
@@ -61,4 +61,14 @@ table {
     .testata .cdf-filo {
         display: none;
     }
+}
+
+/* Pulsanti-icona disattivati (la lente di "Cerca" a campo vuoto): cacao attenuato invece del grigio di Mantine, così il
+   pulsante si riconosce subito e si capisce che si attiva dopo. Da disattivato Mantine non segna la variante: la regola vale
+   per tutti gli ActionIcon, che nel PDA disattivati sono solo le lenti di ricerca. */
+.mantine-ActionIcon-root[data-disabled] {
+    background-color: var(--cdf-cacao);
+    color: var(--cdf-bianco);
+    border-color: transparent;
+    opacity: 0.4;
 }

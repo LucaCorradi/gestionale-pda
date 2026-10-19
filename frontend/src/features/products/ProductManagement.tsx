@@ -330,7 +330,7 @@ export default function ProductManagement() {
 
                             {/* Nessun risultato adatto: si puo' creare l'articolo con l'alias non trovato */}
                             {pendingAlias && (
-                                <Button variant="light" onClick={() => setCreating(true)} disabled={busy}>Crea nuovo articolo</Button>
+                                <Button onClick={() => setCreating(true)} disabled={busy}>Crea nuovo articolo</Button>
                             )}
                         </>
                     )}

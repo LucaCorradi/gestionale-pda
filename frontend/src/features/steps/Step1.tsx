@@ -130,7 +130,7 @@ export default function Step1() {
                     </Stack>
                 </Radio.Group>
             </ScrollArea>
-            <Button variant="light" mb="xs" onClick={() => navigate('/products')}>Gestione prodotti</Button>
+            <Button mb="xs" onClick={() => navigate('/products')}>Gestione prodotti</Button>
             <NavigationButtons onNavigateNext={handleSubmit} nextDisabled={!selectedDepartmentId || posting} />
         </WizardStepContainer>
     )

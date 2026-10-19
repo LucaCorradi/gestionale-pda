@@ -74,7 +74,7 @@ function MobileRow({ product, index, open, onToggle, onEdit, onDelete, onQuantit
                                 />
                             )}
                             {onEdit && (
-                                <ActionIcon variant="light" size="lg" aria-label="Modifica" onClick={() => onEdit(index)}>
+                                <ActionIcon size="lg" aria-label="Modifica" onClick={() => onEdit(index)}>
                                     <LuPencil />
                                 </ActionIcon>
                             )}

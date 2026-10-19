@@ -2,17 +2,18 @@ import { createTheme, type CSSVariablesResolver, type MantineColorsTuple } from 
 
 /*
     Tema Mantine sulle linee guida del brand Casa del Formaggio (styles/brand-tokens.css, copia di casa-del-formaggio-brand).
-    Riferimento visivo l'area admin di gestionale-code: fondo avorio, testo cacao, pulsante principale miele con testo cacao,
-    pulsanti "default" quieti, poco colore. I colori di stato (red, yellow, green degli avvisi) restano quelli di Mantine.
+    Colore principale CACAO con testo bianco (il "pulsante d'ordine" del brand): scelta del titolare per la leggibilità sui
+    palmari, dove il miele con testo cacao si vedeva male. Fondo avorio, pulsanti "default" quieti, poco colore.
+    I colori di stato (red, yellow, green degli avvisi) restano quelli di Mantine.
 
     Le tavolozze di Mantine vogliono colori letterali (ne ricava le trasparenze), quindi qui i valori di tokens.css sono
     riscritti in esadecimale: se cambia il file del brand, aggiornare anche questi.
 */
 
-// Miele: la tonalità 5 è il colore pieno; le chiare sono le tinte del brand, le scure il "miele testo"
-const miele: MantineColorsTuple = [
-    '#FFF1D7', '#FFF1D7', '#FFDFA5', '#FFDFA5', '#FFB838',
-    '#FFB838', '#FFB838', '#966D21', '#966D21', '#966D21',
+// Cacao: la tonalità 9 è il colore pieno; le chiare sono le tinte calde del brand
+const cacao: MantineColorsTuple = [
+    '#EFEAE2', '#EFEAE2', '#EAE0D9', '#E8E1D4', '#B0946F',
+    '#867054', '#76665A', '#4E3824', '#4E3824', '#402B19',
 ]
 
 // I grigi di Mantine (bordi, fondi tenui, testo attenuato) diventano i neutri caldi del brand
@@ -30,14 +31,14 @@ const grigiCaldi: MantineColorsTuple = [
 ]
 
 export const mantineTheme = createTheme({
-    primaryColor: 'cdf-miele',
-    primaryShade: 5,
-    // Sul miele si scrive in cacao (theme.black), mai in bianco
+    primaryColor: 'cdf-cacao',
+    primaryShade: 9,
+    // Sul cacao si scrive in bianco (theme.white), sui fondi chiari in cacao (theme.black)
     autoContrast: true,
     black: '#402B19',
     white: '#FFFFFF',
     colors: {
-        'cdf-miele': miele,
+        'cdf-cacao': cacao,
         gray: grigiCaldi,
     },
     fontFamily: 'var(--cdf-font)',
@@ -53,7 +54,7 @@ export const mantineTheme = createTheme({
     },
 })
 
-// Variabili che i colori da soli non bastano a sistemare: contrasto delle varianti "light"/"outline" sul miele,
+// Variabili che i colori da soli non bastano a sistemare: varianti "light"/"outline" del cacao leggibili,
 // link in caramello, bordi sottili sui pulsanti predefiniti
 export const brandCssVariables: CSSVariablesResolver = () => ({
     variables: {},
@@ -64,13 +65,17 @@ export const brandCssVariables: CSSVariablesResolver = () => ({
         '--mantine-color-anchor': 'var(--cdf-caramello)',
         '--mantine-color-default-border': 'var(--cdf-filetto)',
         '--mantine-color-default-hover': 'var(--cdf-avorio)',
-        '--mantine-color-cdf-miele-filled-hover': 'var(--cdf-miele-55)',
-        '--mantine-color-cdf-miele-light': 'var(--cdf-miele-80)',
-        '--mantine-color-cdf-miele-light-hover': 'var(--cdf-miele-55)',
-        '--mantine-color-cdf-miele-light-color': 'var(--cdf-cacao)',
-        '--mantine-color-cdf-miele-outline': 'var(--cdf-cacao)',
-        '--mantine-color-cdf-miele-outline-hover': 'var(--cdf-crema)',
-        '--mantine-color-cdf-miele-text': 'var(--cdf-miele-testo)',
+        // Pulsanti disattivati (es. la lente di "Cerca" a campo vuoto): riconoscibili, non quasi invisibili
+        '--mantine-color-disabled': 'var(--cdf-camel-80)',
+        '--mantine-color-disabled-color': 'var(--cdf-camel-testo)',
+        '--mantine-color-disabled-border': 'var(--cdf-filetto)',
+        '--mantine-color-cdf-cacao-filled-hover': 'var(--cdf-cacao-chiaro)',
+        '--mantine-color-cdf-cacao-light': 'var(--cdf-camel-80)',
+        '--mantine-color-cdf-cacao-light-hover': 'var(--cdf-caramello-80)',
+        '--mantine-color-cdf-cacao-light-color': 'var(--cdf-cacao)',
+        '--mantine-color-cdf-cacao-outline': 'var(--cdf-cacao)',
+        '--mantine-color-cdf-cacao-outline-hover': 'var(--cdf-camel-80)',
+        '--mantine-color-cdf-cacao-text': 'var(--cdf-cacao)',
     },
     dark: {},
 })
