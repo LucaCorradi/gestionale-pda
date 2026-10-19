@@ -1,6 +1,6 @@
 -- Schema del database del gestionale PDA + dati di base.
 -- Da eseguire una volta su un database vuoto (Plesk -> Database -> phpMyAdmin -> Importa, oppure da riga di comando):
---   mysql -u UTENTE -p NOME_DATABASE < sql/init.sql
+--   mysql -u UTENTE -p NOME_DATABASE < deploy/sql/init.sql
 -- Sicuro da rieseguire: le tabelle esistenti non vengono toccate e i dati di base non si duplicano.
 --
 -- Dati di base: due reparti (Negozio, Cucina) e i quattro tipi di operazione, tutti abilitati su tutti i reparti.

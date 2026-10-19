@@ -1,0 +1,32 @@
+# Dipendenze e build
+node_modules/
+dist/
+*.tsbuildinfo
+
+# Configurazioni locali e segreti (restano versionati solo i file *.example)
+.env
+.env.*
+!.env.example
+!.env.production.example
+
+# File caricati dagli utenti in sviluppo
+backend/uploads/
+
+# Dump di database (dati dei clienti): mai nel repository.
+# NB: backend/prisma/migrations/ VA versionata, è la storia dello schema applicata in produzione.
+*.sql.zip
+*.sql.gz
+*.zip
+
+# Editor / sistema operativo
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+*.log
+
+# Registro dei prodotti creati da palmare (sul server sta in logs/, montato nel container)
+logs/
+# Configurazione locale del backend per lo sviluppo
+backend/env/

@@ -1,6 +1,6 @@
 # Warehouse Client (PDA magazzino)
 
-Webapp React per il palmare di magazzino: wizard per i documenti di magazzino (scarico, carico, spostamento, carico da fornitore) e gestione dei prodotti. Il backend è in un altro repository (`pda_backend`).
+Webapp React per il palmare di magazzino: wizard per i documenti di magazzino (scarico, carico, spostamento, carico da fornitore) e gestione dei prodotti. Il backend è nella cartella `backend/` dello stesso repository.
 
 Stack: **React 19 + TypeScript + Vite + Mantine 8 + Redux Toolkit + React Router + Zod**.
 
@@ -20,17 +20,15 @@ Il server di sviluppo (porta 5173) è raggiungibile anche dalla rete locale (`ho
 ## Script
 ```bash
 npm run dev          # sviluppo
-npm run build:dev    # build con le impostazioni di sviluppo
-npm run build:prod   # build di produzione (dist/)
+npm run build        # controllo dei tipi + build di produzione (dist/)
 npm run preview      # serve la build in locale
 ```
+In produzione la build la fa `deploy/aggiorna-server.sh` sul server.
 
-## Indirizzo del backend (`VITE_API_BASE_URL`)
-| File | Valore | Uso |
-|---|---|---|
-| `.env.development` | `http://localhost:8787/api` | sviluppo sul proprio PC |
-| `.env.production` | `/api` | produzione: relativo, il backend sta sullo stesso host dietro nginx (funziona con qualsiasi nome host, http o https) |
-| `.env.development.local` (non in git) | es. `http://IP-DEL-PC:8787/api` | prove dal palmare: il palmare non può usare `localhost`, serve l'IP del PC di sviluppo |
+## Indirizzo del backend
+In produzione `VITE_API_URL=/api` (relativo: il backend sta sullo stesso host dietro nginx). In sviluppo, senza variabile,
+il frontend chiama la porta 8787 dello stesso host da cui si apre la pagina: dal palmare basta aprire `http://IP-DEL-PC:5173`.
+Per un backend altrove: `VITE_API_URL` in `.env.local` (non in git).
 
 Il PC di sviluppo deve permettere in firewall le porte 5173 (frontend) e 8787 (backend).
 
@@ -59,7 +57,7 @@ Il PC di sviluppo deve permettere in firewall le porte 5173 (frontend) e 8787 (b
 La pagina deve restare nello schermo del palmare (320-412 px di larghezza) senza scorrere di lato: niente elementi affiancati che non vanno a capo (pulsanti con testo lungo, campo + pulsante), che sforerebbero i bordi. Il contenitore delle pagine (`WizardStepContainer`) si adatta alla larghezza solo se il contenuto lo permette.
 
 ## Deploy
-Vedi `GUIDA-DEPLOY.md` nel repository del backend: il frontend compilato (`dist/`) va copiato nella document root del sito, il backend gira in Docker.
+Vedi `DEPLOY.md` nella radice del repository: sul server `deploy/aggiorna-server.sh` compila il frontend e lo copia nella document root di `pda.lacdf.it`.
 
 ## Compatibilità con palmari datati ("aggiorna WebView")
 Vite di suo compila per browser recenti (`<script type="module">`, sintassi JS moderna): sui palmari con

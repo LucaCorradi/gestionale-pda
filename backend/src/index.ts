@@ -77,6 +77,18 @@ const initApp = () => {
 		res.send("I am online!");
 	});
 
+	// Lo usano deploy/aggiorna-server.sh e l'healthcheck di Docker: controlla solo il database del PDA, perché senza
+	// Passepartout o i frigoriferi l'app parte lo stesso (e lo dicono i log). Fuori da apiRouter: non deve aspettare gli altri DB.
+	app.get("/api/health", async (req, res) => {
+		try {
+			if (!dataSource.isInitialized) await dataSource.initialize();
+			await dataSource.query("SELECT 1");
+			res.json({ ok: true });
+		} catch {
+			res.status(503).json({ ok: false, message: "Database del PDA non raggiungibile" });
+		}
+	});
+
 	apiRouter.use(databaseMiddleware(dataSources));
 
 	// ROUTES

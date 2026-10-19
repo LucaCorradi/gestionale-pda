@@ -1,0 +1,11 @@
+{
+  "name": "gestionale-pda",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev:api": "npm --prefix backend run dev",
+    "dev:web": "npm --prefix frontend run dev",
+    "build:api": "npm --prefix backend run build",
+    "build:web": "npm --prefix frontend run build"
+  }
+}

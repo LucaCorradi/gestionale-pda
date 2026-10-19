@@ -1,0 +1,41 @@
+# Backend del PDA magazzino su Plesk: vedi DEPLOY.md.
+#
+# RETE. Come gli altri gestionali, il container entra nella rete Docker esterna "cdfnet": MySQL è sul gateway 172.18.20.1 e
+# ammette l'utente dell'app da 172.18.20.%. Passepartout, DB dei frigoriferi e stampante Zebra (rete del negozio) si
+# raggiungono passando dal server e dalla VPN.
+# PORTA. Pubblicata SOLO su localhost: l'API non ha autenticazione e può creare documenti in Passepartout, ci arriva solo
+# nginx. Porte già occupate sul server: 4000, 4200, 8786, 8789 (questa), 8792, 8793, 8795 (tabella nella skill plesk-webapp).
+services:
+  backend:
+    container_name: pda_backend
+    build: ./backend
+    restart: unless-stopped
+    env_file: .env
+    networks:
+      - cdfnet
+    ports:
+      - "127.0.0.1:${PORT:-8789}:${PORT:-8789}"
+    environment:
+      TZ: Europe/Rome
+      NODE_ENV: production
+      PORT: ${PORT:-8789}
+      CREATED_PRODUCTS_LOG_PATH: /app/logs/created-products.log
+      # Vuoto di proposito: dentro il container l'app ascolta su tutte le interfacce, altrimenti la porta pubblicata non
+      # la raggiunge nessuno (502 in nginx). A limitare l'accesso a localhost ci pensa "ports" qui sopra.
+      LISTEN_HOST: ""
+    volumes:
+      # Registro dei prodotti creati o modificati da palmare: fuori dal container, non si perde a ogni ricostruzione
+      - ./logs:/app/logs
+      # Formati dei barcode a quantità variabile: letti a ogni scansione, una modifica non richiede di ricostruire.
+      # Il file è nel repository: le modifiche vanno committate, altrimenti il prossimo aggiornamento da Plesk le sovrascrive
+      - ./backend/config:/app/config
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:'+process.env.PORT+'/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
+
+networks:
+  cdfnet:
+    external: true

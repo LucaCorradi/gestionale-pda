@@ -11,23 +11,54 @@
     }
 }
 
+/* Scelta di reparto e operazione: come le schede di gestionale-code (fondo bianco, filetto, scelta in cacao su miele chiaro) */
 .radiocard__root {
     position: relative;
     padding: var(--mantine-spacing-md);
-    transition: border-color 150ms ease;
+    border: 2px solid var(--cdf-filetto);
+    background-color: var(--cdf-bianco);
+    transition: border-color 150ms ease, background-color 150ms ease;
 
     &[data-checked] {
-        border-color: var(--mantine-primary-color-filled);
+        border-color: var(--cdf-cacao);
+        background-color: var(--cdf-miele-80);
     }
 }
 .radiocard__root:hover {
-	background-color: var(--mantine-color-gray-0);
+    border-color: var(--cdf-camel);
 }
 
 .radiocard__text {
-    font-family: var(--mantine-font-family-monospace);
-    font-weight: 500;
+    font-weight: var(--cdf-peso-medium);
     font-size: var(--mantine-font-size-md);
     line-height: 1.3;
-    color: var(--mantine-color-bright);
+    color: var(--cdf-cacao);
+}
+
+/* Focus visibile del brand: 2 px cacao (Mantine userebbe il miele, poco visibile sull'avorio) */
+.mantine-focus-auto:focus-visible,
+.mantine-focus-always:focus {
+    outline-color: var(--cdf-cacao);
+}
+
+/* Numeri (quantita', giacenze, temperature) allineati */
+table {
+    font-variant-numeric: tabular-nums;
+}
+
+/* Testata: filo a quattro colori sotto il logo (vedi Header.tsx) */
+.testata {
+    background-color: var(--cdf-bianco);
+}
+.testata .cdf-filo {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
+/* Sotto md la testata è nascosta (palmari: tutto lo schermo al lavoro) */
+@media (max-width: 61.99em) {
+    .testata .cdf-filo {
+        display: none;
+    }
 }

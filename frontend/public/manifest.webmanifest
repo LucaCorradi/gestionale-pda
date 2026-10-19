@@ -1,0 +1,17 @@
+{
+  "name": "PDA magazzino · Casa del Formaggio",
+  "short_name": "PDA",
+  "description": "Movimenti di magazzino, prodotti ed etichette dal palmare",
+  "lang": "it",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FCF7EE",
+  "theme_color": "#402B19",
+  "icons": [
+    { "src": "/icona-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icona-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icona-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

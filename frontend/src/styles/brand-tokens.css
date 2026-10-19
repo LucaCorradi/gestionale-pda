@@ -1,0 +1,76 @@
+/* Casa del Formaggio · design tokens (manuale definitivo, ottobre 2026) */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500&display=swap');
+
+:root {
+  /* Palette di marca */
+  --cdf-miele: #FFB838;       /* PANTONE 7549 U · accento, linea formaggi */
+  --cdf-caramello: #966340;   /* PANTONE 2315 U · linea salumi */
+  --cdf-camel: #B0946F;       /* PANTONE 465 U · linea bottega e cucina */
+  --cdf-cacao: #402B19;       /* PANTONE 4625 U · testi, ristorazione */
+
+  /* Fondi */
+  --cdf-avorio: #FCF7EE;      /* fondo pagina */
+  --cdf-crema: #F2DFBB;       /* fondi caldi di sezione */
+  --cdf-bianco: #FFFFFF;      /* solo card e campi */
+
+  /* Varianti per testo e dettagli */
+  --cdf-miele-testo: #966D21;
+  --cdf-camel-testo: #867054;
+  --cdf-testo-secondario: #76665A;
+  --cdf-filetto: #E8E1D4;
+
+  /* Tinte */
+  --cdf-miele-80: #FFF1D7;
+  --cdf-miele-55: #FFDFA5;
+  --cdf-caramello-80: #EAE0D9;
+  --cdf-camel-80: #EFEAE2;
+  --cdf-cacao-chiaro: #4E3824;  /* riquadri su fondo cacao */
+
+  /* Carattere */
+  --cdf-font: 'Poppins', system-ui, sans-serif;
+  --cdf-peso-light: 300;
+  --cdf-peso-regular: 400;
+  --cdf-peso-medium: 500;
+  --cdf-occhiello-spaziatura: 0.2em;
+
+  /* Forme */
+  --cdf-raggio-pulsante: 5px;
+  --cdf-raggio-card: 6px;
+  --cdf-raggio-riquadro: 10px;
+  --cdf-filo-altezza: 8px;
+}
+
+body {
+  margin: 0;
+  background: var(--cdf-avorio);
+  color: var(--cdf-cacao);
+  font-family: var(--cdf-font);
+  font-weight: var(--cdf-peso-regular);
+  line-height: 1.65;
+}
+
+/* Filo a quattro colori, ordine fisso */
+.cdf-filo {
+  height: var(--cdf-filo-altezza);
+  background: linear-gradient(90deg,
+    var(--cdf-miele) 0 25%, var(--cdf-caramello) 25% 50%,
+    var(--cdf-camel) 50% 75%, var(--cdf-cacao) 75% 100%);
+}
+
+.cdf-occhiello {
+  font-size: 13px;
+  font-weight: var(--cdf-peso-medium);
+  letter-spacing: var(--cdf-occhiello-spaziatura);
+  text-transform: uppercase;
+  color: var(--cdf-caramello);
+}
+
+.cdf-btn-principale { background: var(--cdf-miele); color: var(--cdf-cacao); }
+.cdf-btn-ordine { background: var(--cdf-cacao); color: var(--cdf-bianco); }
+.cdf-btn-secondario { background: transparent; color: var(--cdf-cacao); box-shadow: inset 0 0 0 2px var(--cdf-cacao); }
+.cdf-btn-principale, .cdf-btn-ordine, .cdf-btn-secondario {
+  font: var(--cdf-peso-medium) 16px/1 var(--cdf-font);
+  min-height: 44px; padding: 0 24px; border: 0;
+  border-radius: var(--cdf-raggio-pulsante); cursor: pointer;
+}
+:focus-visible { outline: 2px solid var(--cdf-cacao); outline-offset: 2px; }

@@ -1,3 +1,7 @@
+// In produzione l'API è relativa (/api, VITE_API_URL impostata da deploy/aggiorna-server.sh): stesso host del sito dietro nginx.
+// In sviluppo il backend gira sulla 8787 dello stesso PC da cui si apre la pagina, così dal palmare in LAN basta l'IP del PC.
+const BASE_URL = import.meta.env.VITE_API_URL ?? `${location.protocol}//${location.hostname}:8787/api`
+
 // Errore HTTP con lo stato e il messaggio inviato dal server (es. 404 "Product not found", 409 "L'alias è già associato a ...")
 export class ApiError extends Error {
     status: number
@@ -27,13 +31,13 @@ async function toApiError(res: Response): Promise<ApiError> {
 }
 
 export async function httpGet<T = unknown>(url: string): Promise<T> {
-    const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}${url}`)
+    const res = await fetch(`${BASE_URL}${url}`)
     if (!res.ok) throw await toApiError(res)
     return res.json() as Promise<T>
 }
 
 export async function httpPost<T = unknown>(url: string, body?: unknown): Promise<T> {
-    const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}${url}`, {
+    const res = await fetch(`${BASE_URL}${url}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: body ? JSON.stringify(body) : undefined

@@ -6,8 +6,9 @@ import Footer from "./Footer"
 export default function App() {
     return (
         <AppShell header={{ height: { base: 0, md: 60 } }} footer={{ height: { base: 0, md: 50 } }} px="md">
-            <AppShell.Header px="md">
+            <AppShell.Header px="md" className="testata">
                 <Header />
+                <div className="cdf-filo" />
             </AppShell.Header>
             <AppShell.Main>
                 <Outlet />

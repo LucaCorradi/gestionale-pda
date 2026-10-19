@@ -71,13 +71,13 @@ export default function RefrigeratorData() {
                 {loadingChart ? (
                     <CustomSpinner h={600} />
                 ) : !chartData || !fridgeNames ? (
-                    <Card withBorder h={600} bg="gray.0" shadow="sm">
+                    <Card withBorder h={600} shadow="sm">
                         <Center h="100%">
                             <Text c="dimmed">Aggiorna il grafico per visualizzare i dati</Text>
                         </Center>
                     </Card>
                 ) : !chartData.length || !fridgeNames.length ? (
-                    <Card withBorder h={600} bg="gray.0" shadow="sm">
+                    <Card withBorder h={600} shadow="sm">
                         <Center h="100%">
                             <Text c="dimmed">Nessun dato trovato per questo prodotto e questo range di date.</Text>
                         </Center>

@@ -1,18 +1,15 @@
 {
-  "name": "warehousepda",
+  "name": "pda-backend",
   "version": "1.0.0",
-  "description": "",
+  "description": "PDA magazzino: API per i palmari (Passepartout, frigoriferi, etichette)",
   "main": "src/index.ts",
   "type": "module",
   "scripts": {
-    "build": "tsc",
-    "start": "npx tsx src/index.ts",
-    "migration:generate:develop": "tsx  -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:generate -d appDataSource.ts migrations/develop/develop",
-    "migration:generate:prod": "tsx  -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:generate -d appDataSource.ts migrations/production/production",
-    "migration:run": "tsx -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:run -d appDataSource.ts"
+    "dev": "tsx watch --env-file=env/.env.local src/index.ts",
+    "build": "tsc --noEmit",
+    "start": "tsx src/index.ts"
   },
-  "author": "The BB's Way",
-  "license": "ISC",
+  "author": "Casa del Formaggio",
   "devDependencies": {
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
@@ -31,5 +28,6 @@
     "soap": "^1.4.1",
     "typeorm": "^0.3.26",
     "zod": "^4.1.11"
-  }
+  },
+  "private": true
 }

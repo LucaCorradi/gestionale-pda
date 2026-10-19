@@ -1,0 +1,15 @@
+# Fine riga normalizzati nel repository, convertiti al checkout secondo il sistema
+* text=auto
+
+# Script eseguiti dentro il container Linux: devono restare LF anche se clonati su Windows,
+# altrimenti il container non parte ("/bin/sh^M: not found")
+*.sh text eol=lf
+Dockerfile text eol=lf
+
+# Batch di Windows: con fine riga LF cmd.exe sbaglia salti ed etichette
+*.bat text eol=crlf
+
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary

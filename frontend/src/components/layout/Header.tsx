@@ -17,11 +17,11 @@ export default function Header() {
     return (
         <Group h="100%" justify="space-between" visibleFrom="md">
             <Group wrap="nowrap">
-                <Image src="/cdf_logo.png" w={36} onClick={goHome} style={{ cursor: 'pointer' }} />
-                <Text size="sm" c="dimmed">Warehouse PDA</Text>
+                <Image src="/logo.svg" h={36} w="auto" alt="Casa del Formaggio" onClick={goHome} style={{ cursor: 'pointer' }} />
+                <Text className="cdf-occhiello">PDA magazzino</Text>
             </Group>
             <Group wrap="nowrap">
-                {import.meta.env.VITE_DEBUG === 'true' && (
+                {import.meta.env.DEV && (
                     <Button variant="light" onClick={() => console.warn(fullState)}>Print cache</Button>
                 )}
                 <Anchor component={Link} to="/products">Prodotti</Anchor>

@@ -1,14 +1,9 @@
 ## Installazione e avvio
 
-- **Server (Plesk, Docker + nginx)**: vedi `GUIDA-DEPLOY.md`.
-- **In locale per sviluppare**: servono Node 20.6 o superiore e un MySQL raggiungibile. Compila `env/.env.local` con i tuoi valori, poi:
+- **Server (Plesk, Docker + nginx)**: vedi `DEPLOY.md` nella radice del repository.
+- **In locale per sviluppare**: vedi `CLAUDE.md` §3 (`backend/env/.env.local`, poi `npm run dev`).
 
-```bash
-npm install
-npx tsx --env-file=env/.env.local src/index.ts
-```
-
-Lo schema del database è in `sql/init.sql` (tabelle e dati di base: reparti e tipi di operazione).
+Lo schema del database è in `deploy/sql/init.sql` (tabelle e dati di base: reparti e tipi di operazione).
 
 # 📦 Palmare Magazzino
 
