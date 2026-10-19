@@ -84,8 +84,9 @@ Il frontend in sviluppo chiama `http(s)://<host da cui si apre la pagina>:8787/a
   nel viewport: non toglierli.
 
 **Grafica: linee guida del brand, come in gestionale-code.** Solo i colori di `styles/brand-tokens.css`, riportati in
-`theme.ts` come tavolozze Mantine (**cacao primario con testo bianco**, scelto dal titolare per la leggibilità sui palmari al posto
-del miele; grigi di Mantine sostituiti dai neutri caldi; pulsanti-icona disattivati in cacao attenuato, `index.css`) e in
+`theme.ts` come tavolozze Mantine (miele primario con testo cacao, grigi di Mantine sostituiti dai neutri caldi; pulsanti-icona disattivati in miele
+attenuato, `index.css`). Provato il 19/10 il cacao come primario: il titolare ha preferito tornare al miele, con i pulsanti
+importanti ("Gestione prodotti") pieni invece che in variante chiara e in
 `brandCssVariables` (fondo avorio, testo cacao, link caramello, varianti light/outline leggibili). Restano di Mantine i colori
 di **stato** (red, yellow, green degli avvisi) e quelli delle serie nel grafico dei frigoriferi (`getColorFor`). Quando
 cambia il file del brand: ricopiare `tokens.css` e aggiornare gli esadecimali in `theme.ts`.
@@ -98,10 +99,9 @@ prezzo e categoria) · etichette Zebra EAN-8 · barcode a peso/quantità variabi
 repository unico con deploy standard e web app installabile (ottobre 2026).
 
 ### Aperto
-- **Primo deploy su `pda.lacdf.it`** con il nuovo flusso (Git di Plesk + `aggiorna-server.sh`): passaggio dalla vecchia
-  installazione in `DEPLOY.md` §0. Da provare sui palmari reali, soprattutto i più vecchi, con HTTPS.
-- Grafica sul brand verificata solo in build: da guardare a schermo su palmare e desktop.
-- Creare il repository GitHub `LucaCorradi/gestionale-pda` e archiviare `pda_backend` / `pda_frontend`.
+- **In produzione su `pda.lacdf.it` dal 19/10/2026** con il nuovo flusso (Git di Plesk + `aggiorna-server.sh`), funzionante.
+  Da provare sui palmari reali, soprattutto i più vecchi (HTTPS, installazione da Chrome), poi spegnere `pda.cdf` e la
+  vecchia cartella `pda-backend` (`DEPLOY.md` §0.4) e archiviare su GitHub `pda_backend` / `pda_frontend`.
 
 ## 6. Come lavorare con l'utente
 
