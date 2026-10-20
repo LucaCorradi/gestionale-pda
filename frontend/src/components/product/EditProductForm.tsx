@@ -86,11 +86,12 @@ export default function EditProductForm({ product, onSaved, onCancel }: EditProd
         }
     }
 
+    // Tutto il modulo è l'area flessibile della pagina: dentro, i campi scorrono e i pulsanti restano in fondo
     return (
-        <Stack h="100%" gap="xs">
+        <Stack gap="xs" className="area-flessibile">
             <Text size="xs" c="dimmed">Modifica articolo {product.Code} · {product.UnitOfMeasure}</Text>
 
-            <ScrollArea type="auto" flex={1} mih={0}>
+            <ScrollArea type="always" offsetScrollbars flex={1} mih={0}>
                 <Stack gap="xs">
                     <ProductDataFields catalog={catalog} value={data} onChange={(patch) => setData((prev) => ({ ...prev, ...patch }))} />
                     <AliasListFields codes={aliases} onChange={setAliases} />

@@ -5,6 +5,7 @@ import { LuEye, LuSearchCheck } from "react-icons/lu"
 import { productLookupRequestSchema, productLookupResponseSchema, type ProductLookupRequest, type ProductLookupResponse } from "../../../schemas/productLookupSchema"
 import { httpPost } from "../../../lib/api"
 import { showError } from "../../../lib/utils"
+import CampoDaSparare from "../../../components/CampoDaSparare"
 import dayjs from "dayjs"
 import type { ChartFiltersSnapshot } from "../../../schemas/utils"
 
@@ -66,7 +67,7 @@ export default function RefrigeratorDataFilters({ loading, onSubmitRequested }: 
         <Flex direction={{ base: 'column', md: 'row' }} align={{ base: "stretch", md: 'end' }} gap="md" wrap="nowrap">
 
             {/* Product input */}
-            <TextInput
+            <CampoDaSparare
                 label="Prodotto"
                 placeholder="Prodotto..."
                 value={productInput}
@@ -75,13 +76,7 @@ export default function RefrigeratorDataFilters({ loading, onSubmitRequested }: 
                     setLookupOk(false)
                 }}
                 onBlur={doLookup}
-                onKeyDown={async (e) => {
-                    if (e.key === 'Enter') {
-                        e.preventDefault()
-                        e.stopPropagation()
-                        await doLookup()
-                    }
-                }}
+                onScan={() => void doLookup()}
                 rightSection={
                     <ActionIcon onClick={doLookup} type="button" loading={isLookingUp} disabled={!productInput}>
                         <LuSearchCheck />

@@ -1,5 +1,5 @@
 import { employeeSchema, operationDetailResponseSchema, supplierSchema, warehouseSchema, type OperationDetailResponse } from "../../schemas/operationDetailSchema"
-import { Loader, NumberInput, ScrollArea } from "@mantine/core"
+import { Loader, NumberInput } from "@mantine/core"
 import { goToStep, truncateToStep, setSelection, setStepData, type OperationDetailsSelection } from "../wizard/wizardSlice"
 import { useDispatch, useSelector } from "react-redux"
 import { DatePickerInput } from "@mantine/dates"
@@ -17,6 +17,7 @@ import NavigationButtons from "../../components/NavigationButtons"
 import dayjs from "dayjs"
 import { CustomSelect } from "../../components/CustomSelect"
 import ButtonSelect from "../../components/ButtonSelect"
+import AreaScorrevole from "../../components/AreaScorrevole"
 
 dayjs.locale('it')
 
@@ -193,7 +194,7 @@ export default function Step3() {
 
     return (
         <WizardStepContainer>
-            <ScrollArea type="always" offsetScrollbars flex={1}>
+            <AreaScorrevole>
 
                 {/* Date input is always present */}
                 <Controller control={control} name="operationDate" render={({ field }) => (
@@ -279,7 +280,7 @@ export default function Step3() {
                     )} />
                 )}
 
-            </ScrollArea>
+            </AreaScorrevole>
 
             <NavigationButtons onNavigateNext={() => { void handleSubmit(onSubmit)() }} nextDisabled={!isValid || posting} />
         </WizardStepContainer>

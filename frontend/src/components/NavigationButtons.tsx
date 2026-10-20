@@ -1,6 +1,7 @@
 import { useDispatch, useSelector } from "react-redux"
 import type { AppDispatch, RootState } from "../store"
-import { Button, Group } from "@mantine/core"
+import { Button } from "@mantine/core"
+import BarraAzioni from "./BarraAzioni"
 import { LuChevronLeft, LuChevronRight, LuSave } from "react-icons/lu"
 import { goToStep } from "../features/wizard/wizardSlice"
 import { useNavigate } from "react-router-dom"
@@ -38,13 +39,13 @@ export default function NavigationButtons({ onNavigateBack, onNavigateNext, back
     }
 
     return (
-        <Group wrap="nowrap" grow>
+        <BarraAzioni>
             <Button disabled={!canGoBack} onClick={goBack} leftSection={<LuChevronLeft />}>Indietro</Button>
             {isLast ? (
                 <Button disabled={!canGoNext} onClick={goNext} rightSection={<LuSave />}>Invia</Button>
             ) : (
                 <Button disabled={!canGoNext} onClick={goNext} rightSection={<LuChevronRight />}>Avanti</Button>
             )}
-        </Group>
+        </BarraAzioni>
     )
 }

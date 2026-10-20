@@ -1,14 +1,17 @@
-import { ActionIcon, Alert, Button, Group, Modal, NumberInput, ScrollArea, Stack, Table, Text, TextInput } from "@mantine/core"
+import { ActionIcon, Alert, Button, Group, Modal, NumberInput, Stack, Text } from "@mantine/core"
 import { useEffect, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { LuPencil, LuTrash2 } from "react-icons/lu"
 import { z } from "zod"
 import { ApiError, httpGet, httpPost } from "../../lib/api"
-import { selectAllOnClick, selectAllOnFocus, showError } from "../../lib/utils"
+import { showError } from "../../lib/utils"
 import { productLookupResponseSchema } from "../../schemas/productLookupSchema"
 import ButtonSelect from "../../components/ButtonSelect"
 import CustomSpinner from "../../components/CustomSpinner"
 import WizardStepContainer from "../../components/WizardStepContainer"
+import AreaScorrevole from "../../components/AreaScorrevole"
+import BarraAzioni from "../../components/BarraAzioni"
+import CampoDaSparare from "../../components/CampoDaSparare"
 
 /*
     Inventario parziale: si sceglie magazzino e operatore, si sparano gli articoli contati (quantità di serie 1; per tanti
@@ -143,11 +146,15 @@ export default function Inventory() {
     if (done) {
         return (
             <WizardStepContainer>
-                <Alert color="green" title={done.Number ? `Inventario n. ${done.Number} registrato in Passepartout` : "Nessuna differenza: nessun documento creato"}>
-                    {done.Rows.length} articoli contati, {done.Rows.filter((r) => r.Difference !== 0).length} con differenze.
-                </Alert>
-                <Button mt="md" onClick={() => setDone(null)}>Nuovo inventario</Button>
-                <Button mt="xs" variant="default" onClick={() => navigate("/")}>Torna alle operazioni</Button>
+                <AreaScorrevole>
+                    <Alert color="green" title={done.Number ? `Inventario n. ${done.Number} in Passepartout` : "Nessuna differenza, nessun documento"}>
+                        {done.Rows.length} articoli contati, {done.Rows.filter((r) => r.Difference !== 0).length} con differenze
+                    </Alert>
+                </AreaScorrevole>
+                <BarraAzioni>
+                    <Button variant="default" onClick={() => navigate("/")}>Home</Button>
+                    <Button onClick={() => setDone(null)}>Nuovo inventario</Button>
+                </BarraAzioni>
             </WizardStepContainer>
         )
     }
@@ -157,12 +164,14 @@ export default function Inventory() {
         return (
             <WizardStepContainer>
                 <Text fw={500} c="dimmed">Inventario: scegli magazzino e operatore</Text>
-                <ScrollArea type="always" offsetScrollbars flex={1}>
+                <AreaScorrevole>
                     <ButtonSelect label="Magazzino" data={setup.Warehouses.map((w) => ({ value: w.Name, label: w.Name }))} value={state.warehouse} onChange={(v) => update({ ...state, warehouse: v })} />
                     <ButtonSelect label="Operatore" data={setup.Employees.map((e) => ({ value: e.EmployeeName, label: e.EmployeeName }))} value={state.employee} onChange={(v) => update({ ...state, employee: v })} />
-                </ScrollArea>
-                <Button mt="xs" disabled={!state.warehouse || !state.employee} onClick={() => update({ ...state, started: true })}>Inizia il conteggio</Button>
-                <Button mt="xs" variant="default" onClick={() => navigate("/")}>Indietro</Button>
+                </AreaScorrevole>
+                <BarraAzioni>
+                    <Button variant="default" onClick={() => navigate("/")}>Indietro</Button>
+                    <Button disabled={!state.warehouse || !state.employee} onClick={() => update({ ...state, started: true })}>Inizia</Button>
+                </BarraAzioni>
             </WizardStepContainer>
         )
     }
@@ -172,24 +181,24 @@ export default function Inventory() {
         return (
             <WizardStepContainer>
                 <Text fw={500}>Riepilogo · {state.warehouse}</Text>
-                <Text size="sm" c="dimmed">Differenze rispetto a quanto risulta adesso in Passepartout: in negativo gli ammanchi, in positivo le eccedenze.</Text>
-                <ScrollArea type="always" offsetScrollbars flex={1}>
-                    <Table striped fz="sm">
-                        <Table.Thead><Table.Tr><Table.Th>Articolo</Table.Th><Table.Th ta="right">Contato</Table.Th><Table.Th ta="right">Risultava</Table.Th><Table.Th ta="right">Differenza</Table.Th></Table.Tr></Table.Thead>
-                        <Table.Tbody>
-                            {review.map((r) => (
-                                <Table.Tr key={r.Code}>
-                                    <Table.Td>{r.Code} {nameOf(r.Code)?.name}</Table.Td>
-                                    <Table.Td ta="right">{qty(r.Counted)} {nameOf(r.Code)?.unitOfMeasure}</Table.Td>
-                                    <Table.Td ta="right">{qty(r.Current)}</Table.Td>
-                                    <Table.Td ta="right" c={r.Difference < 0 ? "red" : r.Difference > 0 ? "green" : "dimmed"} fw={r.Difference !== 0 ? 600 : undefined}>{r.Difference === 0 ? "=" : signed(r.Difference)}</Table.Td>
-                                </Table.Tr>
-                            ))}
-                        </Table.Tbody>
-                    </Table>
-                </ScrollArea>
-                <Button mt="xs" loading={busy} onClick={confirm}>{changes.length ? `Conferma (${changes.length} differenze)` : "Conferma (nessuna differenza)"}</Button>
-                <Button mt="xs" variant="default" disabled={busy} onClick={() => setReview(null)}>Torna al conteggio</Button>
+                {/* Schermo stretto: niente tabella a colonne, una riga per articolo su due livelli (vedi CLAUDE.md, palmari) */}
+                <AreaScorrevole mt="xs">
+                    <Stack gap={6}>
+                        {review.map((r) => (
+                            <div key={r.Code} className="riga-elenco">
+                                <Text size="sm" lineClamp={1}>{r.Code} {nameOf(r.Code)?.name}</Text>
+                                <Group justify="space-between" wrap="nowrap" gap="xs">
+                                    <Text size="sm" c="dimmed">{qty(r.Counted)} {nameOf(r.Code)?.unitOfMeasure} · era {qty(r.Current)}</Text>
+                                    <Text size="sm" fw={600} c={r.Difference < 0 ? "red" : r.Difference > 0 ? "green" : "dimmed"}>{r.Difference === 0 ? "=" : signed(r.Difference)}</Text>
+                                </Group>
+                            </div>
+                        ))}
+                    </Stack>
+                </AreaScorrevole>
+                <BarraAzioni>
+                    <Button variant="default" disabled={busy} onClick={() => setReview(null)}>Indietro</Button>
+                    <Button loading={busy} onClick={confirm}>{changes.length ? `Conferma (${changes.length})` : "Conferma"}</Button>
+                </BarraAzioni>
             </WizardStepContainer>
         )
     }
@@ -199,8 +208,8 @@ export default function Inventory() {
         <WizardStepContainer>
             <Text fw={500}>Inventario · {state.warehouse}</Text>
             <Group align="flex-end" gap="xs" wrap="nowrap">
-                <NumberInput label="Quantità" w={110} value={quantity} onChange={setQuantity} min={0} decimalScale={3} decimalSeparator="," allowNegative={false} onFocus={selectAllOnFocus} onClick={selectAllOnClick} />
-                <TextInput
+                <NumberInput label="Quantità" w={110} value={quantity} onChange={setQuantity} min={0} decimalScale={3} decimalSeparator="," allowNegative={false} />
+                <CampoDaSparare
                     ref={scanRef}
                     label="Codice"
                     placeholder="Spara o scrivi il codice"
@@ -208,17 +217,15 @@ export default function Inventory() {
                     value={scan}
                     disabled={lookingUp}
                     onChange={(e) => setScan(e.currentTarget.value)}
-                    onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); void addScan() } }}
-                    onFocus={selectAllOnFocus}
-                    onClick={selectAllOnClick}
+                    onScan={() => void addScan()}
                 />
             </Group>
-            <ScrollArea type="always" offsetScrollbars flex={1} mt="xs">
-                {state.rows.length === 0 && <Text c="dimmed" size="sm">Nessun articolo contato. Ogni sparo aggiunge la quantità indicata (di solito 1).</Text>}
+            <AreaScorrevole mt="xs">
+                {state.rows.length === 0 && <Text c="dimmed" size="sm">Nessun articolo contato</Text>}
                 <Stack gap={4}>
                     {state.rows.map((r) => (
-                        <Group key={r.code} gap="xs" wrap="nowrap" justify="space-between">
-                            <Text size="sm"><b>{qty(r.quantity)} {r.unitOfMeasure}</b> {r.code} {r.name}</Text>
+                        <Group key={r.code} gap="xs" wrap="nowrap" justify="space-between" className="riga-elenco">
+                            <Text size="sm" lineClamp={2}><b>{qty(r.quantity)} {r.unitOfMeasure}</b> {r.code} {r.name}</Text>
                             <Group gap={2} wrap="nowrap">
                                 <ActionIcon variant="subtle" aria-label="Correggi quantità" onClick={() => { setEditing(r); setEditQuantity(r.quantity) }}><LuPencil /></ActionIcon>
                                 <ActionIcon variant="subtle" color="red" aria-label="Togli" onClick={() => update({ ...state, rows: state.rows.filter((x) => x.code !== r.code) })}><LuTrash2 /></ActionIcon>
@@ -226,9 +233,11 @@ export default function Inventory() {
                         </Group>
                     ))}
                 </Stack>
-            </ScrollArea>
-            <Button mt="xs" disabled={!state.rows.length} loading={busy} onClick={openReview}>Riepilogo ({state.rows.length} articoli)</Button>
-            <Button mt="xs" variant="default" onClick={cancel}>Annulla inventario</Button>
+            </AreaScorrevole>
+            <BarraAzioni>
+                <Button variant="default" onClick={cancel}>Annulla</Button>
+                <Button disabled={!state.rows.length} loading={busy} onClick={openReview}>Riepilogo ({state.rows.length})</Button>
+            </BarraAzioni>
 
             <Modal opened={!!editing} onClose={() => setEditing(null)} title={editing ? `${editing.code} ${editing.name}` : ""} centered>
                 <NumberInput label={`Quantità contata (${editing?.unitOfMeasure ?? ""})`} value={editQuantity} onChange={setEditQuantity} min={0} decimalScale={3} decimalSeparator="," allowNegative={false} data-autofocus />

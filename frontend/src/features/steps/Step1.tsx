@@ -1,6 +1,6 @@
 import { type DepartmentResponse, departmentResponseSchema } from "../../schemas/departmentSchema"
 import { goToStep, setSelection, setStepData, truncateToStep } from "../wizard/wizardSlice"
-import { Alert, Button, Group, Radio, ScrollArea, Stack, Text } from "@mantine/core"
+import { Alert, Button, Group, Radio, Stack, Text } from "@mantine/core"
 import { httpGet, httpPost } from "../../lib/api"
 import { useEffect, useState } from "react"
 import { showError } from "../../lib/utils"
@@ -11,6 +11,7 @@ import type { RootState } from "../../store"
 import { useNavigate } from "react-router-dom"
 import WizardStepContainer from "../../components/WizardStepContainer"
 import NavigationButtons from "../../components/NavigationButtons"
+import AreaScorrevole from "../../components/AreaScorrevole"
 
 export default function Step1() {
     const dispatch = useDispatch()
@@ -116,7 +117,7 @@ export default function Step1() {
     return (
         <WizardStepContainer>
             <Text fw={500} c="dimmed">Seleziona un reparto</Text>
-            <ScrollArea type="always" offsetScrollbars flex={1}>
+            <AreaScorrevole>
                 <Radio.Group value={selectedDepartmentId} onChange={setSelectedDepartmentId}>
                     <Stack pt="md" gap="xs">
                         {departments.map((dep) => (
@@ -129,10 +130,12 @@ export default function Step1() {
                         ))}
                     </Stack>
                 </Radio.Group>
-            </ScrollArea>
-            <Button mb="xs" onClick={() => navigate('/products')}>Gestione prodotti</Button>
-            {/* Si usa ogni tanto: fuori dalle operazioni quotidiane e meno in evidenza */}
-            <Button mb="xs" variant="default" onClick={() => navigate('/inventory')}>Inventario</Button>
+            </AreaScorrevole>
+            {/* Inventario: si usa ogni tanto, fuori dalle operazioni quotidiane e meno in evidenza (circa un terzo della riga) */}
+            <Group mb="xs" gap="xs" wrap="nowrap">
+                <Button flex={2} onClick={() => navigate('/products')}>Gestione prodotti</Button>
+                <Button flex={1} variant="default" onClick={() => navigate('/inventory')}>Inventario</Button>
+            </Group>
             <NavigationButtons onNavigateNext={handleSubmit} nextDisabled={!selectedDepartmentId || posting} />
         </WizardStepContainer>
     )

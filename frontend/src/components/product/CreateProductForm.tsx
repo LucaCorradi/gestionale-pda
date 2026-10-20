@@ -86,9 +86,10 @@ export default function CreateProductForm({ initialAlias, onCreated, onCancel }:
         }
     }
 
+    // Tutto il modulo è l'area flessibile della pagina: dentro, i campi scorrono e i pulsanti restano in fondo
     return (
-        <Stack h="100%" gap="xs">
-            <ScrollArea type="auto" flex={1} mih={0}>
+        <Stack gap="xs" className="area-flessibile">
+            <ScrollArea type="always" offsetScrollbars flex={1} mih={0}>
                 <Stack gap="xs">
                     <ProductDataFields catalog={catalog} value={data} onChange={(patch) => setData((prev) => ({ ...prev, ...patch }))} />
 

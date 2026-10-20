@@ -1,6 +1,6 @@
 :root {
     /* --altezza-visibile la imposta main.tsx (visualViewport, tastiera esclusa); 100dvh se il browser non la offre */
-    --content-height: calc(var(--altezza-visibile, 100dvh) -var(--app-shell-header-height) - var(--app-shell-footer-height));
+    --content-height: calc(var(--altezza-visibile, 100dvh) - var(--app-shell-header-height) - var(--app-shell-footer-height));
 }
 
 /* Su telefoni e palmari i campi devono avere il testo di almeno 16px: sotto quella misura iPhone ingrandisce la pagina
@@ -72,4 +72,21 @@ table {
     color: var(--cdf-cacao);
     border-color: transparent;
     opacity: 0.7;
+}
+
+/* Righe di elenco sul palmare (inventario): filetto sotto, niente tabelle a colonne sullo schermo stretto */
+.riga-elenco {
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--cdf-filetto);
+}
+
+/* Pagine dentro WizardStepContainer: una sola area flessibile (AreaScorrevole, o className="area-flessibile"), che
+   riempie lo spazio e quando la tastiera accorcia lo schermo è l'unica a restringersi (minimo 120 px, poi scorre la pagina).
+   Titoli, campi e pulsanti non si restringono mai. */
+.contenitore-passo > * {
+    flex-shrink: 0;
+}
+.contenitore-passo > .area-flessibile {
+    flex: 1 1 0;
+    min-height: 120px;
 }

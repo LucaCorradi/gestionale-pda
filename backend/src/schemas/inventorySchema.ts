@@ -31,8 +31,6 @@ export const inventoryRowSchema = z.object({
 });
 export type InventoryRow = z.infer<typeof inventoryRowSchema>;
 
-export const inventoryPreviewResponseSchema = z.array(inventoryRowSchema);
-
 export const inventoryConfirmRequestSchema = inventoryPreviewRequestSchema.extend({
     EmployeeName: z.string().nonempty()
 });

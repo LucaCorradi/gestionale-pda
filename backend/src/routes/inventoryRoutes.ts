@@ -1,6 +1,6 @@
 import express from 'express';
 import { inputValidationMiddleware, outputValidationMiddleware } from '../middlewares/validationMiddleware';
-import { InventoryConfirmRequest, InventoryPreviewRequest, inventoryConfirmRequestSchema, inventoryConfirmResponseSchema, inventoryPreviewRequestSchema, inventoryPreviewResponseSchema, inventorySetupResponseSchema } from '../schemas/inventorySchema';
+import { InventoryConfirmRequest, InventoryPreviewRequest, inventoryConfirmRequestSchema, inventoryConfirmResponseSchema, inventoryPreviewRequestSchema, inventoryRowSchema, inventorySetupResponseSchema } from '../schemas/inventorySchema';
 import { InventoryService } from '../services/inventoryService';
 import { PassepartoutHandler } from '../utils/passepartout/passepartoutHandler';
 
@@ -19,7 +19,7 @@ inventoryRoutes.get('/setup', outputValidationMiddleware(inventorySetupResponseS
 });
 
 // Riepilogo prima della conferma: contato, giacenza attuale, differenza
-inventoryRoutes.post('/preview', inputValidationMiddleware(inventoryPreviewRequestSchema), outputValidationMiddleware(inventoryPreviewResponseSchema), async (req, res, next) => {
+inventoryRoutes.post('/preview', inputValidationMiddleware(inventoryPreviewRequestSchema), outputValidationMiddleware(inventoryRowSchema), async (req, res, next) => {
     try {
         res.json(await inventoryService.preview(req.body as InventoryPreviewRequest));
     } catch (error) {

@@ -1,4 +1,4 @@
-import { ActionIcon, Group, Loader, Modal, ScrollArea, Text } from "@mantine/core"
+import { ActionIcon, Group, Loader, Modal, Text } from "@mantine/core"
 import { useEffect, useState } from "react"
 import { LuPlus } from "react-icons/lu"
 import { useDispatch, useSelector } from "react-redux"
@@ -12,6 +12,7 @@ import { showError } from "../../lib/utils"
 import WizardStepContainer from "../../components/WizardStepContainer"
 import NavigationButtons from "../../components/NavigationButtons"
 import ProductsTable from "../../components/ProductsTable"
+import AreaScorrevole from "../../components/AreaScorrevole"
 
 type SelectOption = {
     value: string
@@ -108,7 +109,7 @@ export default function Step4() {
                         <LuPlus />
                     </ActionIcon>
             </Group>
-            <ScrollArea type="always" offsetScrollbars flex={1}>
+            <AreaScorrevole>
                 {items.length === 0 ? (
                     <Text c="dimmed" size="sm">Nessun prodotto inserito. Premi "+" per aggiungerne uno.</Text>
                 ) : (
@@ -122,7 +123,7 @@ export default function Step4() {
                         onQuantityChange={handleQuantityChange}
                     />
                 )}
-            </ScrollArea>
+            </AreaScorrevole>
             <NavigationButtons onNavigateNext={onSubmit} nextDisabled={items.length === 0} />
         </WizardStepContainer>
 

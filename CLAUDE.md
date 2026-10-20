@@ -94,6 +94,31 @@ Il frontend in sviluppo chiama `http(s)://<host da cui si apre la pagina>:8787/a
 - Campi di testo a 16 px sui touch (iPhone ingrandisce la pagina sotto quella misura) e `interactive-widget=resizes-content`
   nel viewport: non toglierli.
 
+**Interfaccia sui palmari (regole del titolare, 20/10/2026): lo schermo è piccolo, si lavora con una mano, tutto deve
+comportarsi allo stesso modo in ogni pagina.** Ogni comportamento ricorrente sta in UN componente comune: le pagine lo usano,
+non lo riscrivono (niente gestori di tastiera, selezione o layout copiati a mano).
+
+| Cosa | Componente (frontend/src) | Regola |
+|---|---|---|
+| Pagina | `components/WizardStepContainer` | ogni schermata ci sta dentro (altezza dell'area visibile, tastiera esclusa) |
+| Parte che scorre | `components/AreaScorrevole` | UNA per pagina; se è un modulo con pulsanti propri, `className="area-flessibile"` |
+| Pulsanti in fondo | `components/BarraAzioni` (anche dentro `NavigationButtons`) | ultimo elemento; secondario (`variant="default"`) a sinistra, principale a destra, etichette brevi |
+| Campi codice/alias/barcode | `components/CampoDaSparare` | mai un `TextInput` a mano: la tastiera NON si apre quando il cursore ci arriva da solo (lo scanner scrive comunque), si apre al tocco; Invio = `onScan` |
+| Campi numerici | `NumberInput` (tema in `theme.ts`) | al tocco il numero si seleziona: impostato una volta nel tema |
+| Testo libero (descrizioni) | `TextInput` | lì la tastiera serve subito: normale |
+| Elenchi | `.riga-elenco` (index.css) | niente tabelle a più colonne: una riga per voce su due livelli, dato importante a destra, `lineClamp` sulle descrizioni |
+
+- **Conciso**: niente frasi di spiegazione sotto i titoli, testi vuoti brevi ("Nessun articolo contato"); le spiegazioni vanno nel
+  README. Azioni rare meno in evidenza e affiancate a quelle frequenti (es. "Gestione prodotti" 2/3 e "Inventario" 1/3).
+- **Tastiera**: `.contenitore-passo` (index.css) fa restringere solo l'area flessibile (minimo 120 px, poi scorre la pagina); titoli,
+  campi e pulsanti restano interi. In `calc()` gli operatori vanno tra spazi (`- var(…)`): un `-var(` annulla tutto il calcolo e i
+  pulsanti salgono (è successo il 20/10).
+- **Risposte delle rotte**: `outputValidationMiddleware` vuole lo schema del **singolo elemento** (gli elenchi li gestisce da solo:
+  un `z.array` dà "expected array").
+- **Prima di consegnare**: `npm run build` in backend e frontend; pagina a **360 px** (strumenti del browser) o sul palmare, con la
+  tastiera aperta: nessuno scorrimento orizzontale, pulsanti in fondo e interi; `grep` di `<TextInput`, `onKeyDown`,
+  `selectAllOn`, `<ScrollArea` per verificare che nessuna pagina abbia rifatto a mano quello che fanno i componenti comuni.
+
 **Grafica: linee guida del brand, come in gestionale-code.** Solo i colori di `styles/brand-tokens.css`, riportati in
 `theme.ts` come tavolozze Mantine (miele primario con testo cacao, grigi di Mantine sostituiti dai neutri caldi; pulsanti-icona disattivati in miele
 attenuato, `index.css`). Provato il 19/10 il cacao come primario: il titolare ha preferito tornare al miele, con i pulsanti

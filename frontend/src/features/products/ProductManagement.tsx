@@ -9,8 +9,11 @@ import EditProductForm from "../../components/product/EditProductForm"
 import PrintLabelPanel from "../../components/product/PrintLabelPanel"
 import ProductDetailsCard from "../../components/product/ProductDetailsCard"
 import WizardStepContainer from "../../components/WizardStepContainer"
+import AreaScorrevole from "../../components/AreaScorrevole"
+import BarraAzioni from "../../components/BarraAzioni"
+import CampoDaSparare from "../../components/CampoDaSparare"
 import { httpGet, httpPost } from "../../lib/api"
-import { selectAllOnClick, selectAllOnFocus, showError } from "../../lib/utils"
+import { showError } from "../../lib/utils"
 import { productLookupRequestSchema, productLookupResponseSchema, type ProductLookupResponse } from "../../schemas/productLookupSchema"
 import {
     productAddAliasRequestSchema, productByCodeRequestSchema, productCatalogResponseSchema, productSearchRequestSchema, productSearchResponseSchema,
@@ -198,9 +201,9 @@ export default function ProductManagement() {
             />
 
             {section === 'code' && (
-                <ScrollArea type="auto" flex={1} mt="xs">
+                <AreaScorrevole mt="xs">
                     <Stack gap="xs">
-                        <TextInput
+                        <CampoDaSparare
                             aria-label="Alias, codice o barcode etichetta"
                             placeholder="Scansiona o digita il codice"
                             value={aliasInput}
@@ -210,15 +213,7 @@ export default function ProductManagement() {
                                 setCodeStatus('idle')
                                 setProduct(null)
                             }}
-                            onKeyDown={(e) => {
-                                if (e.key === 'Enter') {
-                                    e.preventDefault()
-                                    lookup()
-                                }
-                            }}
-                            // Al tocco si seleziona tutto: la scansione successiva sovrascrive il codice precedente
-                            onFocus={selectAllOnFocus}
-                            onClick={selectAllOnClick}
+                            onScan={lookup}
                             maxLength={40}
                             autoFocus
                             rightSection={
@@ -246,12 +241,12 @@ export default function ProductManagement() {
                             </>
                         )}
                     </Stack>
-                </ScrollArea>
+                </AreaScorrevole>
             )}
 
             {section === 'description' && (
                 // Colonna che occupa lo schermo: il campo in alto e la lista che riempie lo spazio e scorre
-                <Stack flex={1} mih={0} mt="xs" gap="xs">
+                <Stack mt="xs" gap="xs" className="area-flessibile">
                     {pendingAlias && (
                         <Text size="xs" c="dimmed" style={{ overflowWrap: 'anywhere' }}>Alias da associare: <b>{pendingAlias}</b></Text>
                     )}
@@ -312,7 +307,7 @@ export default function ProductManagement() {
                             )}
 
                             {results !== null && results.length > 0 && (
-                                <ScrollArea type="auto" flex={1} mih={0}>
+                                <ScrollArea type="always" offsetScrollbars flex={1} mih={0}>
                                     <Stack gap={6}>
                                         {results.map((r) => (
                                             <Card key={r.Code} withBorder p="xs" onClick={() => select(r.Code)} style={{ cursor: 'pointer' }}>
@@ -337,11 +332,11 @@ export default function ProductManagement() {
                 </Stack>
             )}
 
-            <Group pt="xs" grow gap="xs">
-                <Button variant="default" leftSection={<LuChevronLeft />} onClick={() => navigate('/')}>Torna alla home</Button>
+            <BarraAzioni>
+                <Button variant="default" leftSection={<LuChevronLeft />} onClick={() => navigate('/')}>Home</Button>
                 {/* Creazione diretta, senza passare da una ricerca (se c'e' un codice non trovato lo propone come alias) */}
                 <Button leftSection={<LuPlus />} onClick={() => setCreating(true)} disabled={busy}>Nuovo prodotto</Button>
-            </Group>
+            </BarraAzioni>
         </WizardStepContainer>
     )
 }

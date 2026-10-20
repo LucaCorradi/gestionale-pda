@@ -1,4 +1,4 @@
-import { Button, Card, Divider, Group, Modal, ScrollArea, SimpleGrid, Stack, Text, ThemeIcon } from "@mantine/core"
+import { Button, Card, Divider, Group, Modal, SimpleGrid, Stack, Text, ThemeIcon } from "@mantine/core"
 import { useEffect, useState } from "react"
 import { useDispatch, useSelector } from "react-redux"
 import { useNavigate } from "react-router-dom"
@@ -12,6 +12,7 @@ import { showError } from "../../lib/utils"
 import { useDisclosure } from "@mantine/hooks"
 import { LuCheck } from "react-icons/lu"
 import ProductsTable from "../../components/ProductsTable"
+import AreaScorrevole from "../../components/AreaScorrevole"
 
 export default function Summary() {
     const [posting, setPosting] = useState<boolean>(false)
@@ -96,7 +97,7 @@ export default function Summary() {
         <WizardStepContainer>
             <Text fw={500} c="dimmed">Riepilogo</Text>
 
-            <ScrollArea type="always" offsetScrollbars flex={1}>
+            <AreaScorrevole>
                 <Stack>
 
                     <Card withBorder>
@@ -170,7 +171,7 @@ export default function Summary() {
                     )}
 
                 </Stack>
-            </ScrollArea>
+            </AreaScorrevole>
 
             <NavigationButtons onNavigateNext={openConfirmModal} isLast nextDisabled={posting} />
 

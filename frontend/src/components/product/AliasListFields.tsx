@@ -1,6 +1,6 @@
-import { ActionIcon, Button, Group, Stack, Text, TextInput } from "@mantine/core"
+import { ActionIcon, Button, Group, Stack, Text } from "@mantine/core"
 import { LuPlus, LuTrash } from "react-icons/lu"
-import { selectAllOnClick, selectAllOnFocus } from "../../lib/utils"
+import CampoDaSparare from "../CampoDaSparare"
 
 // Mezza riga di spazio (circa metà dell'altezza di un campo) tra un alias e l'altro
 const ALIAS_GAP_PX = 18
@@ -24,7 +24,7 @@ export default function AliasListFields({ codes, onChange }: AliasListFieldsProp
             <Stack gap={ALIAS_GAP_PX}>
                 {codes.map((code, index) => (
                     <Group key={index} wrap="nowrap" gap="xs">
-                        <TextInput
+                        <CampoDaSparare
                             flex={1}
                             miw={0}
                             placeholder="Codice"
@@ -33,8 +33,6 @@ export default function AliasListFields({ codes, onChange }: AliasListFieldsProp
                                 const value = e.currentTarget.value
                                 onChange(codes.map((c, i) => (i === index ? value : c)))
                             }}
-                            onFocus={selectAllOnFocus}
-                            onClick={selectAllOnClick}
                             maxLength={40}
                         />
                         <ActionIcon

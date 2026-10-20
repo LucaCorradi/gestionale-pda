@@ -1,4 +1,5 @@
-import { createTheme, type CSSVariablesResolver, type MantineColorsTuple } from '@mantine/core'
+import { NumberInput, createTheme, type CSSVariablesResolver, type MantineColorsTuple } from '@mantine/core'
+import { selectAllOnClick, selectAllOnFocus } from './lib/utils'
 
 /*
     Tema Mantine sulle linee guida del brand Casa del Formaggio (styles/brand-tokens.css, copia di casa-del-formaggio-brand).
@@ -50,6 +51,11 @@ export const mantineTheme = createTheme({
         sm: 'var(--cdf-raggio-pulsante)',
         md: 'var(--cdf-raggio-card)',
         lg: 'var(--cdf-raggio-riquadro)',
+    },
+    components: {
+        // Tutti i campi numerici (quantità, copie, prezzi): al tocco il numero si seleziona e si sovrascrive scrivendo,
+        // uguale ovunque senza ripeterlo in ogni pagina. I campi codice usano CampoDaSparare, che fa lo stesso.
+        NumberInput: NumberInput.extend({ defaultProps: { onFocus: selectAllOnFocus, onClick: selectAllOnClick } }),
     },
 })
 

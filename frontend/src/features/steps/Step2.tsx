@@ -1,6 +1,6 @@
 import { operationTypeResponseSchema, type OperationTypeResponse } from "../../schemas/operationTypeSchema"
 import { goToStep, setSelection, setStepData, truncateToStep } from "../wizard/wizardSlice"
-import { Alert, Group, Radio, ScrollArea, Stack, Text } from "@mantine/core"
+import { Alert, Group, Radio, Stack, Text } from "@mantine/core"
 import { useDispatch, useSelector } from "react-redux"
 import { useNavigate } from "react-router-dom"
 import {  useEffect, useState } from "react"
@@ -11,6 +11,7 @@ import { z } from "zod"
 import CustomSpinner from "../../components/CustomSpinner"
 import WizardStepContainer from "../../components/WizardStepContainer"
 import NavigationButtons from "../../components/NavigationButtons"
+import AreaScorrevole from "../../components/AreaScorrevole"
 
 
 export default function Step2() {
@@ -90,7 +91,7 @@ export default function Step2() {
     return (
         <WizardStepContainer>
             <Text fw={500} c="dimmed">Seleziona un'operazione</Text>
-            <ScrollArea type="always" offsetScrollbars flex={1}>
+            <AreaScorrevole>
                 <Radio.Group value={selectedOperationTypeId} onChange={setSelectedOperationTypeId}>
                     <Stack pt="md" gap="xs">
                         {operationTypes.map((opType) => (
@@ -103,7 +104,7 @@ export default function Step2() {
                         ))}
                     </Stack>
                 </Radio.Group>
-            </ScrollArea>
+            </AreaScorrevole>
             <NavigationButtons onNavigateNext={handleSubmit} nextDisabled={!selectedOperationTypeId || posting} />
         </WizardStepContainer>
     )

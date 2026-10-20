@@ -1,12 +1,13 @@
-import { ActionIcon, Alert, Button, Card, Group, NumberInput, Stack, Text, TextInput } from "@mantine/core"
+import { ActionIcon, Alert, Button, Card, Group, NumberInput, Stack, Text } from "@mantine/core"
 import { Controller, useForm, useWatch } from "react-hook-form"
 import { productLookupRequestSchema, productLookupResponseSchema, type ProductLookupRequest, type ProductLookupResponse } from "../schemas/productLookupSchema"
 import { httpPost } from "../lib/api"
-import { selectAllOnClick, selectAllOnFocus, showError } from "../lib/utils"
+import { showError } from "../lib/utils"
 import { LuSearchCheck } from "react-icons/lu"
 import { useEffect, useRef, useState } from "react"
 import { CustomSelect } from "./CustomSelect"
 import CreateProductForm from "./product/CreateProductForm"
+import CampoDaSparare from "./CampoDaSparare"
 
 export type ProductRow = {
     alias: string | null
@@ -212,7 +213,7 @@ export default function ProductForm({ fridgeOptions, initialRow, editIndex, onSu
                     name="alias"
                     rules={{ required: 'Inserisci il codice prodotto' }}
                     render={({ field }) => (
-                        <TextInput
+                        <CampoDaSparare
                             label="Alias prodotto"
                             placeholder="Scansiona o digita il codice"
                             value={field.value ?? ''}
@@ -224,20 +225,11 @@ export default function ProductForm({ fridgeOptions, initialRow, editIndex, onSu
                                 lookedUpAlias.current = null
                                 field.onChange(e.currentTarget.value)
                             }}
-                            // Al tocco si seleziona tutto: la scansione successiva sovrascrive il codice precedente
-                            onFocus={selectAllOnFocus}
-                            onClick={selectAllOnClick}
                             onBlur={async () => {
                                 field.onBlur()
                                 if (!initialRow) await doLookup()
                             }}
-                            onKeyDown={async (e) => {
-                                if (e.key === 'Enter') {
-                                    e.preventDefault()
-                                    e.stopPropagation()
-                                    if(!initialRow) await doLookup()
-                                }
-                            }}
+                            onScan={() => { if (!initialRow) void doLookup() }}
                             error={errors.alias?.message}
                             rightSection={
                                 <ActionIcon onClick={doLookup} type="button" left={-5} loading={isLookingUp} disabled={!field.value}>
