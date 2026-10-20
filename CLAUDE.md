@@ -68,6 +68,9 @@ Il frontend in sviluppo chiama `http(s)://<host da cui si apre la pagina>:8787/a
 - **Passepartout**: si scrive **solo via SOAP**, il suo database si legge soltanto (regola dell'utente). Gli articoli creati
   da palmare prendono codici da **90001** in su (il contatore di "genera codice" di Passepartout non avanza via web service).
   Ogni creazione/modifica finisce in `logs/created-products.log` (una riga JSON, senza operatore).
+- La stessa serie 90001+ la usa anche **gestionale-fatture** per gli articoli nuovi delle fatture: la scelta del codice è protetta da
+  un blocco condiviso (`utils/sharedLock.ts`, cartella `/var/lib/cdf-condivisi/passepartout` dell'host montata in entrambi i
+  container, blocco `codici-articolo`). Va tenuto uguale a `backend/src/lib/blocco-condiviso.ts` di gestionale-fatture.
 - L'API **non ha autenticazione**: deve restare raggiungibile solo dalla VPN (DNS sull'IP interno, porta su 127.0.0.1).
 - `/api/health` controlla solo il DB del PDA; le altre rotte passano da `databaseMiddleware`, che pretende **tutti e tre** i
   database: se Passepartout o Telenet non rispondono, falliscono tutte le chiamate (comportamento voluto da prima, da

@@ -23,7 +23,11 @@ services:
       # Vuoto di proposito: dentro il container l'app ascolta su tutte le interfacce, altrimenti la porta pubblicata non
       # la raggiunge nessuno (502 in nginx). A limitare l'accesso a localhost ci pensa "ports" qui sopra.
       LISTEN_HOST: ""
+      # Blocco condiviso con gestionale-fatture sulla scelta dei codici articolo 90001+ (backend/src/utils/sharedLock.ts)
+      PASSEPARTOUT_LOCK_DIR: /condivisi/passepartout
     volumes:
+      # La stessa cartella è montata anche nel container di gestionale-fatture
+      - /var/lib/cdf-condivisi/passepartout:/condivisi/passepartout
       # Registro dei prodotti creati o modificati da palmare: fuori dal container, non si perde a ogni ricostruzione
       - ./logs:/app/logs
       # Formati dei barcode a quantità variabile: letti a ogni scansione, una modifica non richiede di ricostruire.

@@ -9,6 +9,7 @@ import { ArticleChanges, ArticleSummary, CategoryEntry, addAliasToBody, applyArt
 import { PassepartoutHandler } from "../utils/passepartout/passepartoutHandler";
 import { logCreatedProduct } from "../utils/createdProductsLog";
 import { LoggerHandler } from "../utils/loggerHandler";
+import { withSharedLock } from "../utils/sharedLock";
 
 const SEARCH_LIMIT = 100;
 const MAX_CODE_ATTEMPTS = 10;
@@ -189,8 +190,9 @@ export class ProductService {
             throw new BadRequestError("Alias duplicati nella richiesta");
         }
 
-        return this.runExclusive(async () => {
-            // Rileggo le novità di Passepartout: potrebbe essere stato creato qualcosa da poco (ufficio o altro palmare)
+        // Blocco condiviso con gestionale-fatture, che crea articoli nella stessa serie di codici (utils/sharedLock)
+        return this.runExclusive(() => withSharedLock("codici-articolo", async () => {
+            // Rileggo le novità di Passepartout: potrebbe essere stato creato qualcosa da poco (ufficio, altro palmare, gestionale-fatture)
             await this.sync(true);
 
             const category = request.CategoryCode ? this.getCategory(request.CategoryCode) : null;
@@ -235,7 +237,7 @@ export class ProductService {
             LoggerHandler.log(`[products]: creato articolo ${code} - ${created.Name}`);
 
             return created;
-        });
+        }));
     }
 
     public async updateProduct(request: ProductUpdateRequest): Promise<ProductLookupResponse> {
