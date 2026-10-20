@@ -7,6 +7,7 @@ import Step4 from "./features/steps/Step4"
 import Summary from "./features/summary/Summary"
 import RefrigeratorData from "./features/charts/routes/RefrigeratorData"
 import ProductManagement from "./features/products/ProductManagement"
+import Inventory from "./features/inventory/Inventory"
 
 export default function AppRoutes() {
     return (
@@ -20,6 +21,7 @@ export default function AppRoutes() {
                 <Route path="*" element={<Navigate to="/" replace />} />
                 <Route path="/charts" element={<RefrigeratorData />} />
                 <Route path="/products" element={<ProductManagement />} />
+                <Route path="/inventory" element={<Inventory />} />
             </Route>
         </Routes>
     )

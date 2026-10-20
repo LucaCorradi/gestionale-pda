@@ -10,6 +10,7 @@ import { operationRoutes } from "./routes/operationRoutes";
 import { InternalServerError } from "./errors/internalServer";
 import { productRoutes } from "./routes/productRoutes";
 import { fridgeRoutes } from "./routes/fridgeRoutes";
+import { inventoryRoutes } from "./routes/inventoryRoutes";
 import { dataSource } from "../appDataSource";
 import { fridgeDataSource } from "../fridgeDataSource";
 import { passepartoutDataSource } from "../passepartoutDataSource";
@@ -94,6 +95,7 @@ const initApp = () => {
 	// ROUTES
 	apiRouter.use("/products", productRoutes);
 	apiRouter.use("/fridges", fridgeRoutes);
+	apiRouter.use("/inventory", inventoryRoutes);
 	apiRouter.use("/", operationRoutes);
 
 	app.use("/api", apiRouter);

@@ -25,6 +25,7 @@ export default function Header() {
                     <Button variant="light" onClick={() => console.warn(fullState)}>Print cache</Button>
                 )}
                 <Anchor component={Link} to="/products">Prodotti</Anchor>
+                <Anchor component={Link} to="/inventory">Inventario</Anchor>
                 <Anchor component={Link} to="/charts">Grafici</Anchor>
             </Group>
         </Group>

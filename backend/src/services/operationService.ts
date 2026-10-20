@@ -42,7 +42,10 @@ export class OperationService {
 			where: {
 				Departments: {
 					ID: departmentID
-				}
+				},
+				// Il carico da fornitore ora arriva in Passepartout dalle fatture (gestionale-fatture): tolto dal palmare per
+				// non caricare due volte la stessa merce. Resta nel database: per rimetterlo basta togliere questa riga.
+				Name: Not(OperationTypeName.CARICO_FORNITORE)
 			}
 		});
 	}

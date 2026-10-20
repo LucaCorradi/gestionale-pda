@@ -71,6 +71,14 @@ Il frontend in sviluppo chiama `http(s)://<host da cui si apre la pagina>:8787/a
 - La stessa serie 90001+ la usa anche **gestionale-fatture** per gli articoli nuovi delle fatture: la scelta del codice è protetta da
   un blocco condiviso (`utils/sharedLock.ts`, cartella `/var/lib/cdf-condivisi/passepartout` dell'host montata in entrambi i
   container, blocco `codici-articolo`). Va tenuto uguale a `backend/src/lib/blocco-condiviso.ts` di gestionale-fatture.
+- **Inventario** (pagina `/inventory`, `services/inventoryService.ts`): in Passepartout un documento Inventario **somma** le sue
+  quantità all'inventario dell'articolo (provato il 20/10/2026: 3 poi 5 dà 8, anche negativo): il palmare manda la **differenza**
+  contato − esistenza letta al momento della conferma (`GetDisponibilitaArticoli`). Inventario parziale: gli articoli non contati
+  non cambiano. Le differenze di ogni inventario restano nelle righe del documento Inventario e in `logs/inventories.log`.
+- **Nomi dei magazzini**: il client SOAP li restituisce senza spazi finali, ma in Passepartout c'è "MAGAZZINO " con lo spazio.
+  Per giacenze e inventari si usa il nome esatto (`PassepartoutHandler.exactWarehouseName`).
+- **Carico fornitore** tolto dalle operazioni quotidiane (filtro in `operationService.getOperationTypesByDepartmentID`): ora arriva
+  dalle fatture con gestionale-fatture. Resta nel database.
 - L'API **non ha autenticazione**: deve restare raggiungibile solo dalla VPN (DNS sull'IP interno, porta su 127.0.0.1).
 - `/api/health` controlla solo il DB del PDA; le altre rotte passano da `databaseMiddleware`, che pretende **tutti e tre** i
   database: se Passepartout o Telenet non rispondono, falliscono tutte le chiamate (comportamento voluto da prima, da
@@ -98,7 +106,7 @@ cambia il file del brand: ricopiare `tokens.css` e aggiornare gli esadecimali in
 
 ### Fatto
 Wizard dei documenti di magazzino verso Passepartout · gestione prodotti da palmare (barcode, alias, creazione e modifica,
-prezzo e categoria) · etichette Zebra EAN-8 · barcode a peso/quantità variabile (formato del retail) · grafici frigoriferi ·
+prezzo e categoria) · etichette Zebra EAN-8 · barcode a peso/quantità variabile (formato del retail) · grafici frigoriferi · inventario parziale (ottobre 2026) ·
 repository unico con deploy standard e web app installabile (ottobre 2026).
 
 ### Aperto

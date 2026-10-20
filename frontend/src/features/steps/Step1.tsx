@@ -131,6 +131,8 @@ export default function Step1() {
                 </Radio.Group>
             </ScrollArea>
             <Button mb="xs" onClick={() => navigate('/products')}>Gestione prodotti</Button>
+            {/* Si usa ogni tanto: fuori dalle operazioni quotidiane e meno in evidenza */}
+            <Button mb="xs" variant="default" onClick={() => navigate('/inventory')}>Inventario</Button>
             <NavigationButtons onNavigateNext={handleSubmit} nextDisabled={!selectedDepartmentId || posting} />
         </WizardStepContainer>
     )

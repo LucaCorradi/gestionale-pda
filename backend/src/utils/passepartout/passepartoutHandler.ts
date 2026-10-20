@@ -296,6 +296,60 @@ export class PassepartoutHandler {
         await soapHandler.callMethodRawText('PutArticolo', PassepartoutHandler.buildRequest('PutArticolo', articleXml));
     }
 
+    /**
+     * Nome del magazzino esattamente come lo scrive Passepartout. L'elenco del palmare arriva dal client SOAP ripulito
+     * dagli spazi, ma in Passepartout c'è "MAGAZZINO " con lo spazio finale: per giacenze e documenti si usa il nome vero.
+     */
+    public static async exactWarehouseName(name: string): Promise<string> {
+        const soapHandler = SOAPHandler.getInstance();
+        const xml = await soapHandler.callMethodRawText('GetMagazzini', PassepartoutHandler.buildRequest('GetMagazzini', ''));
+        const names = [...xml.matchAll(/<a:string>([^<]*)<\/a:string>/g)].map(m => m[1].replace(/&amp;/g, '&'));
+        return names.find(n => n === name) ?? names.find(n => n.trim() === name.trim()) ?? name;
+    }
+
+    /**
+     * Esistenza degli articoli indicati in un magazzino (inventario + carichi - scarichi), in una sola chiamata.
+     * Un articolo senza movimenti in quel magazzino vale 0.
+     */
+    public static async getStock(codes: string[], warehouse: string): Promise<Map<string, number>> {
+        const soapHandler = SOAPHandler.getInstance();
+
+        const body =
+            `<tem:codiciArticolo xmlns:arr="http://schemas.microsoft.com/2003/10/Serialization/Arrays">` +
+            codes.map(code => `<arr:string>${escapeXml(code)}</arr:string>`).join('') +
+            `</tem:codiciArticolo><tem:magazzino>${escapeXml(warehouse)}</tem:magazzino>`;
+        const xml = await soapHandler.callMethodRawText('GetDisponibilitaArticoli', PassepartoutHandler.buildRequest('GetDisponibilitaArticoli', body));
+
+        const stock = new Map<string, number>(codes.map(code => [code, 0]));
+        for (const block of xml.match(/<a:PMBDisponibilitaArticolo>[\s\S]*?<\/a:PMBDisponibilitaArticolo>/g) ?? []) {
+            const code = block.match(/<a:Articolo>([^<]*)<\/a:Articolo>/)?.[1];
+            const existence = Number(block.match(/<a:Esistenza>([^<]*)<\/a:Esistenza>/)?.[1] ?? 0);
+            if (code !== undefined && stock.has(code)) stock.set(code, existence);
+        }
+        return stock;
+    }
+
+    /** Crea un documento Inventario (righe con quantità già calcolate come differenze) e ne restituisce numero e data. */
+    public static async putInventory(warehouse: string, employeeName: string, rows: { Code: string; Quantity: number }[]): Promise<{ Number: number; Date: string }> {
+        const document: PPDocument = {
+            AnagraficaRagioneSociale: "",
+            Causale: "INVENTARIO",
+            Data: format(new Date(), "yyyy-MM-dd"),
+            MagazzinoTestata: warehouse,
+            MagDestTestata: warehouse,
+            Nota: `Inventario da palmare - Dipendente: ${employeeName}`,
+            Righe: {
+                // 3 decimali come negli altri documenti del palmare: le pesate sono al grammo
+                PMBRigaDocumento: rows.map(row => ({ Codice: row.Code, Quantita: row.Quantity.toFixed(3), Magazzino: warehouse, TipoRigaEnum: "Standard" }))
+            },
+            TipoEnum: "Inventario"
+        };
+
+        const soapHandler = SOAPHandler.getInstance();
+        const saved = await soapHandler.callMethodRaw<PPDocument>('PutDocumento', buildPutDocumentoXml(document));
+        return { Number: Number(saved.Numero), Date: format(new Date(saved.Data), "yyyy-MM-dd") };
+    }
+
     // public static async getDocument(documentType: PPDocumentTypeEnum): Promise<PPDocument | null> {  
     //     const dateFormatted = format(new Date(), "yyyy-MM-dd");
         

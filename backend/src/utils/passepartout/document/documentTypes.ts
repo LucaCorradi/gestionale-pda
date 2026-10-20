@@ -9,7 +9,9 @@ export type GetDocumentiResult = {
  * BF = BOLLA FORNITORE
  * BD = BOLLA DEPOSITO
  */
-export type PPDocumentTypeEnum = 'MovimentaCarico' | 'MovimentaScarico' | 'BollaFornitore' | 'BollaDeposito';
+// Inventario: la quantità della riga si SOMMA all'inventario dell'articolo nel magazzino (provato il 20/10/2026: 3 poi 5 → 8,
+// anche negativa): per portare la giacenza al contato si manda la differenza (vedi services/inventoryService.ts)
+export type PPDocumentTypeEnum = 'MovimentaCarico' | 'MovimentaScarico' | 'BollaFornitore' | 'BollaDeposito' | 'Inventario';
 
 /** Riga documento completa */
 export type PPDocumentRow = {
