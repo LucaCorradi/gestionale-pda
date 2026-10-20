@@ -1,5 +1,6 @@
 :root {
-    --content-height: calc(100dvh - var(--app-shell-header-height) - var(--app-shell-footer-height));
+    /* --altezza-visibile la imposta main.tsx (visualViewport, tastiera esclusa); 100dvh se il browser non la offre */
+    --content-height: calc(var(--altezza-visibile, 100dvh) -var(--app-shell-header-height) - var(--app-shell-footer-height));
 }
 
 /* Su telefoni e palmari i campi devono avere il testo di almeno 16px: sotto quella misura iPhone ingrandisce la pagina

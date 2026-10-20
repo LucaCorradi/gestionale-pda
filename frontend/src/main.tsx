@@ -21,6 +21,18 @@ if ("serviceWorker" in navigator && import.meta.env.PROD) {
     navigator.serviceWorker.register("/sw.js").catch(() => {})
 }
 
+// Altezza davvero visibile, tastiera esclusa (usata da --content-height in index.css): così i pulsanti in fondo ai passi
+// restano appoggiati alla tastiera. interactive-widget=resizes-content in index.html basta nella scheda di Chrome, ma
+// aperto come app installata il palmare sovrappone la tastiera senza ridurre 100dvh. Moltiplicando per scale lo zoom
+// con due dita non conta: si riduce solo per la tastiera.
+const viewport = window.visualViewport
+if (viewport) {
+    const aggiornaAltezzaVisibile = () =>
+        document.documentElement.style.setProperty("--altezza-visibile", `${viewport.height * viewport.scale}px`)
+    viewport.addEventListener("resize", aggiornaAltezzaVisibile)
+    aggiornaAltezzaVisibile()
+}
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode>
         <MantineProvider theme={mantineTheme} cssVariablesResolver={brandCssVariables} defaultColorScheme="light">
