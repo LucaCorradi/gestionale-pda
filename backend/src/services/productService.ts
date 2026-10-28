@@ -17,6 +17,8 @@ const MAX_CODE_ATTEMPTS = 10;
 const FULL_RELOAD_MS = 6 * 60 * 60 * 1000;   // ricarico tutto ogni tanto (non arrivano le cancellazioni fatte in Passepartout)
 const DELTA_MIN_INTERVAL_MS = 60 * 1000;     // tra una ricerca e l'altra non rileggo più di una volta al minuto
 const DELTA_MARGIN_MS = 5 * 60 * 1000;       // margine per differenze di orologio tra server e Passepartout
+const INDEX_WAIT_MS = 3 * 1000;              // attesa massima di una ricerca per l'aggiornamento, se l'indice c'è già
+const BACKGROUND_REFRESH_MS = 15 * 60 * 1000; // aggiornamento periodico in background (completo quando sono passate FULL_RELOAD_MS)
 
 // Stessi codici, senza badare a ordine e ripetizioni (lo stesso codice può comparire con due tipi diversi)
 const sameCodes = (a: string[], b: string[]) => a.every(c => b.includes(c)) && b.every(c => a.includes(c));
@@ -36,6 +38,7 @@ export class ProductService {
     private lastSyncStartedAt: Date | null = null;
     private lastSyncAt = 0;
     private syncing: Promise<void> | null = null;
+    private refreshTimer: NodeJS.Timeout | null = null;
 
     // Le scritture su Passepartout passano una alla volta: il codice nuovo si calcola sull'ultimo esistente
     private writeQueue: Promise<unknown> = Promise.resolve();
@@ -83,18 +86,36 @@ export class ProductService {
         return this.syncing;
     }
 
-    // Se ho già un indice, un aggiornamento fallito non blocca le ricerche: si usa quello che c'è
+    /*
+        Se ho già un indice, la ricerca non aspetta più di INDEX_WAIT_MS: un aggiornamento lento (la ricarica completa
+        richiede 30 secondi e più) o fallito non la blocca, si risponde con quello che c'è e l'aggiornamento finisce
+        in background. Era la causa della prima ricerca del mattino "bloccata": scadute le 6 ore, aspettava la ricarica completa.
+    */
     private async ensureIndex(): Promise<void> {
-        try {
-            await this.sync();
-        } catch (err) {
-            LoggerHandler.error(`[products]: aggiornamento indice fallito - ${err}`);
-            if (this.lastSyncStartedAt === null) throw err;
+        const update = this.sync();
+
+        if (this.lastSyncStartedAt === null) {
+            await update;
+            return;
         }
+
+        update.catch(err => LoggerHandler.error(`[products]: aggiornamento indice fallito - ${err}`));
+        let timer: NodeJS.Timeout | undefined;
+        await Promise.race([
+            update.catch(() => undefined),
+            new Promise<void>(resolve => { timer = setTimeout(resolve, INDEX_WAIT_MS); })
+        ]);
+        clearTimeout(timer);
     }
 
+    // Caricamento all'avvio, poi ricarica periodica in background: così la ricarica completa non capita durante una ricerca
     public warmUp(): void {
-        this.sync().catch(err => LoggerHandler.error(`[products]: caricamento iniziale fallito - ${err}`));
+        const run = () => this.sync().catch(err => LoggerHandler.error(`[products]: aggiornamento indice fallito - ${err}`));
+        run();
+        if (!this.refreshTimer) {
+            this.refreshTimer = setInterval(run, BACKGROUND_REFRESH_MS);
+            this.refreshTimer.unref();
+        }
     }
 
     public async getCatalog(): Promise<ProductCatalogResponse> {

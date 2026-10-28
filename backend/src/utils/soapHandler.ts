@@ -2,6 +2,8 @@ import soap, { Client } from 'soap';
 import { XMLParser } from 'fast-xml-parser';
 import { InternalServerError } from '../errors/internalServer';
 
+const SOAP_TIMEOUT_MS = 2 * 60 * 1000;
+
 export interface SOAPArgs {
     [key: string]: any;
 }
@@ -84,7 +86,10 @@ export class SOAPHandler {
                 'Content-Type': 'text/xml; charset=utf-8',
                 'SOAPAction': `"http://tempuri.org/IAdapterWS/${methodName}"`
             },
-            body: xmlBody
+            body: xmlBody,
+            // Senza limite una chiamata appesa (VPN, Passepartout fermo) teneva il palmare in attesa all'infinito.
+            // 2 minuti bastano anche all'elenco completo degli articoli (circa 30 secondi).
+            signal: AbortSignal.timeout(SOAP_TIMEOUT_MS)
         });
 
         if (!response.ok) {

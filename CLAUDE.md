@@ -84,6 +84,8 @@ Il frontend in sviluppo chiama `http(s)://<host da cui si apre la pagina>:8787/a
   database: se Passepartout o Telenet non rispondono, falliscono tutte le chiamate (comportamento voluto da prima, da
   valutare con l'utente se cambiarlo).
 - Dopo un riavvio il backend carica in background l'elenco articoli da Passepartout (~30 s): nginx ha timeout di 120 s.
+  L'indice si aggiorna da solo ogni 15 minuti (completo ogni 6 ore) e una ricerca non aspetta l'aggiornamento più di 3 s:
+  prima la ricarica completa partiva dalla prima ricerca del mattino, che restava bloccata (28/10/2026).
 - **Palmari datati**: la WebView del contenitore kiosk di un palmare non regge nemmeno il bundle legacy; la soluzione
   scelta dall'utente è usare Chrome. Con HTTPS su `pda.lacdf.it` un Android molto vecchio potrebbe rifiutare il certificato:
   prima domanda "kiosk o Chrome?", poi eventualmente `http://pda.cdf` per quel dispositivo.
