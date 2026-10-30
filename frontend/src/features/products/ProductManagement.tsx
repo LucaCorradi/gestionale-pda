@@ -335,7 +335,8 @@ export default function ProductManagement() {
             <BarraAzioni>
                 <Button variant="default" leftSection={<LuChevronLeft />} onClick={() => navigate('/')}>Home</Button>
                 {/* Creazione diretta, senza passare da una ricerca (se c'e' un codice non trovato lo propone come alias) */}
-                <Button leftSection={<LuPlus />} onClick={() => setCreating(true)} disabled={busy}>Nuovo prodotto</Button>
+                {/* "Nuovo" e non "Nuovo prodotto": a 360 px la scritta lunga veniva tagliata */}
+                <Button leftSection={<LuPlus />} onClick={() => setCreating(true)} disabled={busy}>Nuovo</Button>
             </BarraAzioni>
         </WizardStepContainer>
     )

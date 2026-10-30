@@ -18,10 +18,10 @@ export default function AppRoutes() {
                 <Route path="/wizard/step3" element={<Step3 />} />
                 <Route path="/wizard/step4" element={<Step4 />} />
                 <Route path="/wizard/summary" element={<Summary />} />
-                <Route path="*" element={<Navigate to="/" replace />} />
                 <Route path="/charts" element={<RefrigeratorData />} />
                 <Route path="/products" element={<ProductManagement />} />
                 <Route path="/inventory" element={<Inventory />} />
+                <Route path="*" element={<Navigate to="/" replace />} />
             </Route>
         </Routes>
     )

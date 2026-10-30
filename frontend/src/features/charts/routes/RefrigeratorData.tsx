@@ -3,8 +3,6 @@ import { useEffect, useState } from "react"
 import { LuChartLine, LuTableProperties } from "react-icons/lu"
 import { httpPost } from "../../../lib/api"
 import { showError } from "../../../lib/utils"
-import dayjs from 'dayjs'
-import 'dayjs/locale/it'
 import { fridgeChartRequestSchema, fridgeChartResponseSchema, type FridgeChart, type FridgeChartRequest } from "../../../schemas/fridgeChartSchema"
 import CustomSpinner from "../../../components/CustomSpinner"
 import { useDispatch } from "react-redux"
@@ -13,8 +11,6 @@ import RefrigeratorDataChart from "../components/RefrigeratorDataChart"
 import RefrigeratorDataTable from "../components/RefrigeratorDataTable"
 import RefrigeratorDataFilters from "../components/RefrigeratorDataFilters"
 import type { ChartFiltersSnapshot } from "../../../schemas/utils"
-
-dayjs.locale('it')
 
 type ChartMatrixRow = (number | null)[]
 

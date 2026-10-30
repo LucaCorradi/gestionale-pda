@@ -98,6 +98,10 @@ Il frontend in sviluppo chiama `http(s)://<host da cui si apre la pagina>:8787/a
   **non mette in cache niente** di proposito: una cache terrebbe i palmari sulla versione vecchia dopo un aggiornamento.
   Si installa solo in HTTPS (`pda.lacdf.it`). **Nessun gestore `fetch`**, nemmeno vuoto: nella WebView dei kiosk faceva
   fallire tutte le chiamate all'API ("Errore durante il fetch dei reparti"), mentre Chrome funzionava (30/10/2026).
+  Il `<link rel="manifest">` lo aggiunge uno script in `index.html` (ES5, gira prima del bundle): un palmare su cui l'app
+  installata crasha all'apertura (Chrome troppo vecchio, 30/10/2026) si apre **una volta** con `https://pda.lacdf.it/?app=no`:
+  da lì niente manifest né service worker (flag `pda-senza-app` in localStorage) e Chrome propone il semplice collegamento,
+  come prima del 19/10. `?app=si` torna indietro.
 - Campi di testo a 16 px sui touch (iPhone ingrandisce la pagina sotto quella misura) e `interactive-widget=resizes-content`
   nel viewport: non toglierli.
 
@@ -113,6 +117,8 @@ non lo riscrivono (niente gestori di tastiera, selezione o layout copiati a mano
 | Campi codice/alias/barcode | `components/CampoDaSparare` | mai un `TextInput` a mano: la tastiera NON si apre quando il cursore ci arriva da solo (lo scanner scrive comunque), si apre al tocco; Invio = `onScan` |
 | Campi numerici | `NumberInput` (tema in `theme.ts`) | al tocco il numero si seleziona: impostato una volta nel tema |
 | Testo libero (descrizioni) | `TextInput` | lì la tastiera serve subito: normale |
+| Pagina senza contenuto (dati non caricati, elenco vuoto) | `components/AvvisoPagina` | avviso + SEMPRE un pulsante per uscirne (Riprova, Indietro): sul palmare la testata è nascosta |
+| Quantità a schermo | `formatQuantity` (lib/utils) | virgola decimale, fino a 3 decimali; mai `{quantita}` grezzo |
 | Elenchi | `.riga-elenco` (index.css) | niente tabelle a più colonne: una riga per voce su due livelli, dato importante a destra, `lineClamp` sulle descrizioni |
 
 - **Conciso**: niente frasi di spiegazione sotto i titoli, testi vuoti brevi ("Nessun articolo contato"); le spiegazioni vanno nel
@@ -120,10 +126,12 @@ non lo riscrivono (niente gestori di tastiera, selezione o layout copiati a mano
 - **Tastiera**: `.contenitore-passo` (index.css) fa restringere solo l'area flessibile (minimo 120 px, poi scorre la pagina); titoli,
   campi e pulsanti restano interi. In `calc()` gli operatori vanno tra spazi (`- var(…)`): un `-var(` annulla tutto il calcolo e i
   pulsanti salgono (è successo il 20/10).
+- **Date**: la lingua italiana di dayjs (calendari di Mantine, grafici) si carica e si imposta solo in `main.tsx`.
+- **Lint**: `npm run lint` nel frontend (ESLint 9 con le regole degli hook di React); restano solo avvisi su `any` nei `catch`.
 - **Risposte delle rotte**: `outputValidationMiddleware` vuole lo schema del **singolo elemento** (gli elenchi li gestisce da solo:
   un `z.array` dà "expected array").
 - **Prima di consegnare**: `npm run build` in backend e frontend; pagina a **360 px** (strumenti del browser) o sul palmare, con la
-  tastiera aperta: nessuno scorrimento orizzontale, pulsanti in fondo e interi; `grep` di `<TextInput`, `onKeyDown`,
+  tastiera aperta: nessuno scorrimento orizzontale, nessuna scritta tagliata nei pulsanti, pulsanti in fondo e interi; `grep` di `<TextInput`, `onKeyDown`,
   `selectAllOn`, `<ScrollArea` per verificare che nessuna pagina abbia rifatto a mano quello che fanno i componenti comuni.
 
 **Grafica: linee guida del brand, come in gestionale-code.** Solo i colori di `styles/brand-tokens.css`, riportati in

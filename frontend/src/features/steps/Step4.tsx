@@ -1,4 +1,4 @@
-import { ActionIcon, Group, Loader, Modal, Text } from "@mantine/core"
+import { ActionIcon, Group, Modal, Text } from "@mantine/core"
 import { useEffect, useState } from "react"
 import { LuPlus } from "react-icons/lu"
 import { useDispatch, useSelector } from "react-redux"
@@ -13,6 +13,7 @@ import WizardStepContainer from "../../components/WizardStepContainer"
 import NavigationButtons from "../../components/NavigationButtons"
 import ProductsTable from "../../components/ProductsTable"
 import AreaScorrevole from "../../components/AreaScorrevole"
+import CustomSpinner from "../../components/CustomSpinner"
 
 type SelectOption = {
     value: string
@@ -48,7 +49,7 @@ export default function Step4() {
             const fridgeOptions = cached.map((f) => ({ value: String(f.FridgeUUID), label: `${f.Description}` }))
             setFridges(fridgeOptions)
         } catch (e: any) {
-            showError({ title: 'Errore durante il parse dei dati di step 4', error: e })
+            showError({ title: 'Dati dei frigoriferi non validi', error: e })
         } finally {
             setLoading(false)
         }
@@ -91,7 +92,7 @@ export default function Step4() {
     }
 
     // UI
-    if (loading) return <Loader />
+    if (loading) return <CustomSpinner />
 
     return (
         <>
@@ -102,6 +103,7 @@ export default function Step4() {
                     variant="filled"
                     size="lg"
                     radius="xl"
+                    aria-label="Aggiungi prodotto"
                     onClick={() => {
                         setEditIndex(null)
                         openModal()

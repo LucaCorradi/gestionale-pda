@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom"
 import { LuPencil, LuTrash2 } from "react-icons/lu"
 import { z } from "zod"
 import { ApiError, httpGet, httpPost } from "../../lib/api"
-import { showError } from "../../lib/utils"
+import { formatQuantity as qty, showError } from "../../lib/utils"
 import { productLookupResponseSchema } from "../../schemas/productLookupSchema"
 import ButtonSelect from "../../components/ButtonSelect"
 import CustomSpinner from "../../components/CustomSpinner"
@@ -12,6 +12,7 @@ import WizardStepContainer from "../../components/WizardStepContainer"
 import AreaScorrevole from "../../components/AreaScorrevole"
 import BarraAzioni from "../../components/BarraAzioni"
 import CampoDaSparare from "../../components/CampoDaSparare"
+import AvvisoPagina from "../../components/AvvisoPagina"
 
 /*
     Inventario parziale: si sceglie magazzino e operatore, si sparano gli articoli contati (quantità di serie 1; per tanti
@@ -42,13 +43,15 @@ const save = (value: Saved) => {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(value)) } catch { /* pazienza */ }
 }
 
-const qty = (n: number) => n.toLocaleString("it-IT", { maximumFractionDigits: 3 })
 const signed = (n: number) => (n > 0 ? "+" : "") + qty(n)
 
 export default function Inventory() {
     const navigate = useNavigate()
     const [state, setState] = useState<Saved>(load)
     const [setup, setSetup] = useState<z.infer<typeof setupSchema> | null>(null)
+    const [setupError, setSetupError] = useState<string | null>(null)
+    // Cambiandolo si ripete il caricamento di magazzini e operatori (pulsante Riprova)
+    const [setupAttempt, setSetupAttempt] = useState(0)
     const [scan, setScan] = useState("")
     const [quantity, setQuantity] = useState<number | string>(1)
     const [lookingUp, setLookingUp] = useState(false)
@@ -62,10 +65,12 @@ export default function Inventory() {
     const update = (next: Saved) => { setState(next); save(next) }
 
     useEffect(() => {
+        let cancelled = false
         httpGet("/inventory/setup")
-            .then((raw) => setSetup(setupSchema.parse(raw)))
-            .catch((e) => showError({ title: "Errore nel caricamento di magazzini e operatori", error: e }))
-    }, [])
+            .then((raw) => { if (!cancelled) setSetup(setupSchema.parse(raw)) })
+            .catch((e) => { if (!cancelled) setSetupError(e?.message ?? "Errore sconosciuto") })
+        return () => { cancelled = true }
+    }, [setupAttempt])
 
     // Dopo ogni sparo il cursore torna sul campo codice, pronto per il prossimo
     useEffect(() => { if (state.started && !review && !lookingUp) scanRef.current?.focus() }, [state.started, review, lookingUp, state.rows])
@@ -140,6 +145,16 @@ export default function Inventory() {
     const nameOf = (code: string) => state.rows.find((r) => r.code === code)
     const changes = review?.filter((r) => r.Difference !== 0) ?? []
 
+    if (setupError) {
+        return (
+            <AvvisoPagina color="red" title="Impossibile caricare magazzini e operatori" actionLabel="Riprova" onAction={() => {
+                setSetupError(null)
+                setSetupAttempt((n) => n + 1)
+            }}>
+                {setupError}
+            </AvvisoPagina>
+        )
+    }
     if (!setup) return <CustomSpinner />
 
     // ---------- Fatto ----------

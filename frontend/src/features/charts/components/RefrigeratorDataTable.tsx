@@ -1,8 +1,6 @@
 import { Table } from "@mantine/core"
 import dayjs from "dayjs"
 
-dayjs.locale('it')
-
 type RefrigeratorDataTableProps = {
     chartData: (number | null)[][]
     fridgeNames: string[]

@@ -6,10 +6,7 @@ import { productLookupRequestSchema, productLookupResponseSchema, type ProductLo
 import { httpPost } from "../../../lib/api"
 import { showError } from "../../../lib/utils"
 import CampoDaSparare from "../../../components/CampoDaSparare"
-import dayjs from "dayjs"
 import type { ChartFiltersSnapshot } from "../../../schemas/utils"
-
-dayjs.locale('it')
 
 type RefrigeratorDatFiltersProps = {
     loading: boolean

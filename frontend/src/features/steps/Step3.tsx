@@ -1,5 +1,5 @@
 import { employeeSchema, operationDetailResponseSchema, supplierSchema, warehouseSchema, type OperationDetailResponse } from "../../schemas/operationDetailSchema"
-import { Loader, NumberInput } from "@mantine/core"
+import { NumberInput } from "@mantine/core"
 import { goToStep, truncateToStep, setSelection, setStepData, type OperationDetailsSelection } from "../wizard/wizardSlice"
 import { useDispatch, useSelector } from "react-redux"
 import { DatePickerInput } from "@mantine/dates"
@@ -14,12 +14,10 @@ import { httpGet } from "../../lib/api"
 import { fridgeResponseSchema, type FridgeResponse } from "../../schemas/fridgeSchema"
 import WizardStepContainer from "../../components/WizardStepContainer"
 import NavigationButtons from "../../components/NavigationButtons"
-import dayjs from "dayjs"
 import { CustomSelect } from "../../components/CustomSelect"
 import ButtonSelect from "../../components/ButtonSelect"
 import AreaScorrevole from "../../components/AreaScorrevole"
-
-dayjs.locale('it')
+import CustomSpinner from "../../components/CustomSpinner"
 
 type SelectOption = {
     value: string
@@ -128,7 +126,7 @@ export default function Step3() {
             setHasDocumentNumber('DocumentNumber' in parsed)
 
         } catch (e) {
-            showError({ title: 'Errore nel parsing dei dati del dettaglio operazione', error: e })
+            showError({ title: "Dati dell'operazione non validi", error: e })
         } finally {
             setLoading(false)
         }
@@ -181,7 +179,7 @@ export default function Step3() {
             navigate('/wizard/step4')
 
         } catch (e: any) {
-            showError({ title: 'Errore durante il fetch dei frigoriferi', error: e })
+            showError({ title: 'Impossibile caricare i frigoriferi', error: e })
         } finally {
             setPosting(false)
         }
@@ -190,7 +188,7 @@ export default function Step3() {
 
 
     // UI
-    if (loading) return <Loader />
+    if (loading) return <CustomSpinner />
 
     return (
         <WizardStepContainer>

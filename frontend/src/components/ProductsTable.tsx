@@ -1,5 +1,6 @@
 import { ActionIcon, Card, Divider, Group, NumberInput, Stack, Table, Text } from "@mantine/core"
-import { useEffect, useState } from "react"
+import { useState } from "react"
+import { formatQuantity } from "../lib/utils"
 import type { ProductRow } from "./ProductForm"
 import { LuChevronDown, LuChevronUp, LuPencil, LuTrash } from "react-icons/lu"
 
@@ -30,10 +31,13 @@ function MobileRow({ product, index, open, onToggle, onEdit, onDelete, onQuantit
     const [quantity, setQuantity] = useState<number | string>(product.quantity)
     const valid = typeof quantity === 'number' && quantity > 0
 
-    // Se la quantita' cambia da fuori (es. dopo la modifica completa dalla matita) il campo si riallinea
-    useEffect(() => {
-        setQuantity((current) => (typeof current === 'number' && current === product.quantity ? current : product.quantity))
-    }, [product.quantity])
+    // Se la quantita' cambia da fuori (es. dopo la modifica completa dalla matita) il campo si riallinea. Si fa durante il
+    // disegno (schema consigliato da React) invece che in un effetto, che disegnerebbe due volte
+    const [externalQuantity, setExternalQuantity] = useState(product.quantity)
+    if (product.quantity !== externalQuantity) {
+        setExternalQuantity(product.quantity)
+        setQuantity(product.quantity)
+    }
 
     return (
         <Card withBorder p="xs" onClick={editable ? onToggle : undefined} style={{ cursor: editable ? 'pointer' : 'default' }}>
@@ -41,7 +45,7 @@ function MobileRow({ product, index, open, onToggle, onEdit, onDelete, onQuantit
                 <Group justify="space-between" wrap="nowrap" gap="xs">
                     <Text size="sm">{product.code}</Text>
                     <Group gap={6} wrap="nowrap">
-                        <Text size="sm">{product.quantity} {product.unitOfMeasure}</Text>
+                        <Text size="sm">{formatQuantity(product.quantity)} {product.unitOfMeasure}</Text>
                         {editable && (open ? <LuChevronUp size={16} /> : <LuChevronDown size={16} />)}
                     </Group>
                 </Group>
@@ -134,7 +138,7 @@ export default function ProductsTable({ products, onEdit, onDelete, onQuantityCh
                         {canEdit && <Table.Td><LuPencil /></Table.Td>}
                         <Table.Td><Text size="sm">{product.code}</Text></Table.Td>
                         <Table.Td><Text size="sm">{product.name}</Text></Table.Td>
-                        <Table.Td><Text size="sm">{product.quantity} {product.unitOfMeasure}</Text></Table.Td>
+                        <Table.Td><Text size="sm">{formatQuantity(product.quantity)} {product.unitOfMeasure}</Text></Table.Td>
                         <Table.Td><Text size="sm">{product.fridgeDescription || '-'}</Text></Table.Td>
                         {canDelete && <Table.Td><ActionIcon variant="light" color="red" onClick={(e) => {
                             e.preventDefault()

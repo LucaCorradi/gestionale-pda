@@ -27,6 +27,9 @@ export const selectAllOnClick = (e: React.MouseEvent<HTMLInputElement>) => {
     e.currentTarget.select()
 }
 
+// Quantità come le scrive l'operatore: virgola decimale, fino a 3 decimali, senza zeri inutili (12,5 · 0,125 · 3)
+export const formatQuantity = (n: number) => n.toLocaleString("it-IT", { maximumFractionDigits: 3 })
+
 export const toDate = (v: unknown) => {
     if (v == null || v === '') return null
     if (v instanceof Date) return v

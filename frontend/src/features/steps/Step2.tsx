@@ -1,9 +1,9 @@
 import { operationTypeResponseSchema, type OperationTypeResponse } from "../../schemas/operationTypeSchema"
 import { goToStep, setSelection, setStepData, truncateToStep } from "../wizard/wizardSlice"
-import { Alert, Group, Radio, Stack, Text } from "@mantine/core"
+import { Group, Radio, Stack, Text } from "@mantine/core"
 import { useDispatch, useSelector } from "react-redux"
 import { useNavigate } from "react-router-dom"
-import {  useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 import type { RootState } from "../../store"
 import { showError } from "../../lib/utils"
 import { httpPost } from "../../lib/api"
@@ -12,6 +12,7 @@ import CustomSpinner from "../../components/CustomSpinner"
 import WizardStepContainer from "../../components/WizardStepContainer"
 import NavigationButtons from "../../components/NavigationButtons"
 import AreaScorrevole from "../../components/AreaScorrevole"
+import AvvisoPagina from "../../components/AvvisoPagina"
 
 
 export default function Step2() {
@@ -40,7 +41,7 @@ export default function Step2() {
             const parsed = listSchema.parse(cached)
             setOperationTypes(parsed)
         } catch (e: any) {
-            showError({ title: 'Errore durante il parsing dei dati', error: e })
+            showError({ title: 'Dati delle operazioni non validi', error: e })
         } finally {
             setLoading(false)
         }
@@ -78,7 +79,7 @@ export default function Step2() {
             dispatch(goToStep('step3'))
             navigate('/wizard/step3')
         } catch (e: any) {
-            showError({ title: "Errore durante il fetch dei dettagli dell'operazione", error: e })
+            showError({ title: "Impossibile caricare i dati dell'operazione", error: e })
         } finally {
             setPosting(false)
         }
@@ -86,7 +87,14 @@ export default function Step2() {
 
     // State driven UI
     if (loading) return <CustomSpinner />
-    if (!operationTypes?.length) return <Alert color="yellow">Nessuna operazione disponibile</Alert>
+    if (!operationTypes?.length) {
+        return (
+            <AvvisoPagina title="Nessuna operazione disponibile per questo reparto" actionLabel="Indietro" onAction={() => {
+                dispatch(truncateToStep('step1'))
+                navigate('/')
+            }} />
+        )
+    }
 
     return (
         <WizardStepContainer>

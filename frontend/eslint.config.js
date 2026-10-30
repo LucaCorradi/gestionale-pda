@@ -3,6 +3,7 @@ import pluginJs from "@eslint/js";
 import tseslint from "typescript-eslint";
 import pluginReactConfig from "eslint-plugin-react/configs/recommended.js";
 import { fixupConfigRules } from "@eslint/compat";
+import reactHooks from "eslint-plugin-react-hooks";
 
 export default [
   // Ignora le cartelle di build e le dipendenze
@@ -38,6 +39,9 @@ export default [
   // Regole raccomandate per React (con fix per la nuova configurazione)
   ...fixupConfigRules(pluginReactConfig),
 
+  // Regole degli hook di React (dipendenze degli effetti, hook chiamati in modo condizionale)
+  reactHooks.configs.flat.recommended,
+
   // Sovrascrittura e personalizzazione delle regole
   {
     rules: {
@@ -46,6 +50,8 @@ export default [
       "react/jsx-uses-react": "off",
       // Disabilitato perché si usa TypeScript per la tipizzazione dei componenti
       "react/prop-types": "off",
+      // Testi in italiano: gli apostrofi nel JSX sono normali, non errori
+      "react/no-unescaped-entities": "off",
       // Emette un avviso invece di un errore per l'uso di 'any'
       "@typescript-eslint/no-explicit-any": "warn",
     },

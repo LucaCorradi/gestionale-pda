@@ -26,14 +26,17 @@ export default function Summary() {
 
     // Guards
     useEffect(() => {
-        // If state was reset, skip guard
-        if (history.length === 0) return
+        // Wizard vuoto (pagina ricaricata, o appena azzerato dopo l'invio): si riparte dal primo passo, come negli altri passi
+        if (history.length === 0) {
+            navigate('/', { replace: true })
+            return
+        }
 
         if (!history.includes('step4')) {
             dispatch(goToStep('step4'))
             navigate('/wizard/step4')
         }
-    }, [selections, history, navigate])
+    }, [history, dispatch, navigate])
 
     // Values
     const dep = selections.department
@@ -183,10 +186,8 @@ export default function Summary() {
                 </Text>
                 <Group justify="flex-end" mt="sm">
                     <Button variant="default" onClick={closeConfirmModal} disabled={posting}>Annulla</Button>
-                    <Button loading={posting} onClick={async () => {
-                        await handleSubmit()
-                        if (!posting) closeConfirmModal()
-                    }}>Invia</Button>
+                    {/* Se l'invio riesce handleSubmit chiude la finestra; se fallisce resta aperta per riprovare o annullare */}
+                    <Button loading={posting} onClick={() => void handleSubmit()}>Invia</Button>
                 </Group>
             </Stack>
         </Modal>

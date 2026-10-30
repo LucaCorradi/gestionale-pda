@@ -5,8 +5,6 @@ import type { TooltipContentProps } from "recharts"
 import { getColorFor } from "../../../lib/utils"
 import { useElementSize } from "@mantine/hooks"
 
-dayjs.locale('it')
-
 type RefrigeratorDataChartProps = {
     chartData: (number | null)[][]
     fridgeNames: string[]
@@ -67,7 +65,8 @@ export default function RefrigeratorDataChart({ chartData, fridgeNames }: Refrig
                 {payload.map((p) => (
                     <Group key={p.dataKey as string} wrap="nowrap" align="center">
                         <Badge color={getColorFor(p.name ?? '')} variant="dot">{p.name}</Badge>
-                        <Text>{`${(p.value as number).toFixed(1)} °C`}</Text>
+                        {/* Un frigorifero senza lettura in quell'istante ha valore null: senza controllo la pagina si rompe */}
+                        <Text>{typeof p.value === 'number' ? `${p.value.toFixed(1)} °C` : '-'}</Text>
                     </Group>
                 ))}
             </Paper>

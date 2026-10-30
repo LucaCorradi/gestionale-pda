@@ -267,7 +267,11 @@ export default function ProductForm({ fridgeOptions, initialRow, editIndex, onSu
                     <Controller
                     control={control}
                     name="quantity"
-                    rules={{ required: 'Inserisci la quantità '}}
+                    rules={{
+                        required: 'Inserisci la quantità',
+                        // Passepartout vuole quantità maggiori di zero: meglio dirlo qui che all'invio del documento
+                        validate: (v) => (typeof v === 'number' && v > 0) || 'La quantità deve essere maggiore di zero'
+                    }}
                     render={({ field }) => (
                         <NumberInput
                             label="Quantità"

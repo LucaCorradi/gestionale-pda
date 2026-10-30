@@ -9,6 +9,11 @@ import { BrowserRouter } from "react-router-dom"
 import { brandCssVariables, mantineTheme } from "./theme"
 import AppRoutes from "./AppRoutes"
 import { store } from "./store"
+import dayjs from "dayjs"
+import "dayjs/locale/it"
+
+// Date in italiano ovunque (calendari di Mantine, grafici): la lingua si carica e si imposta una volta sola, qui
+dayjs.locale("it")
 
 // Prima i token del brand (copia identica di casa-del-formaggio-brand/tokens.css), poi Mantine
 import "./styles/brand-tokens.css"
@@ -18,9 +23,21 @@ import "@mantine/dates/styles.css"
 import '@mantine/charts/styles.css'
 import "./index.css"
 
+// Palmare aperto con ?app=no (vedi index.html): niente app installabile, quindi niente service worker, e si toglie
+// quello eventualmente registrato prima
+const senzaApp = (() => {
+    try { return localStorage.getItem("pda-senza-app") === "1" } catch { return false }
+})()
+
 // Solo in produzione: in sviluppo un service worker registrato resterebbe attivo anche su altre app aperte sulla stessa porta
 if ("serviceWorker" in navigator && import.meta.env.PROD) {
-    navigator.serviceWorker.register("/sw.js").catch(() => {})
+    if (senzaApp) {
+        navigator.serviceWorker.getRegistrations()
+            .then((registrazioni) => registrazioni.forEach((r) => void r.unregister()))
+            .catch(() => {})
+    } else {
+        navigator.serviceWorker.register("/sw.js").catch(() => {})
+    }
 }
 
 // Altezza davvero visibile, tastiera esclusa (usata da --content-height in index.css): così i pulsanti in fondo ai passi

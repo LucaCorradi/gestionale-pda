@@ -9,7 +9,22 @@
     <title>PDA magazzino · Casa del Formaggio</title>
     <!-- Web app installabile (icona sulla schermata Home, si apre senza barre del browser): manifest e service worker in
          public/, il service worker lo registra main.tsx. Serve HTTPS con certificato valido (pda.lacdf.it). -->
-    <link rel="manifest" href="/manifest.webmanifest" />
+    <!-- Il manifest lo aggiunge questo script, non un <link> fisso: un palmare su cui l'app installata non parte (Chrome
+         troppo vecchio) si apre una volta con ?app=no e da lì in poi Chrome propone il semplice collegamento alla pagina,
+         come prima del 19/10. ?app=si torna indietro. Scritto in JS vecchio: gira prima del bundle legacy. -->
+    <script>
+      (function () {
+        try {
+          if (/[?&]app=no(&|$)/.test(location.search)) localStorage.setItem("pda-senza-app", "1");
+          if (/[?&]app=si(&|$)/.test(location.search)) localStorage.removeItem("pda-senza-app");
+          if (localStorage.getItem("pda-senza-app") === "1") return;
+        } catch (e) {}
+        var link = document.createElement("link");
+        link.rel = "manifest";
+        link.href = "/manifest.webmanifest";
+        document.head.appendChild(link);
+      })();
+    </script>
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta name="theme-color" content="#402B19" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
