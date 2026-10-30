@@ -1,3 +1,5 @@
+// Per primo: Zod senza codice generato a runtime, prima che qualunque modulo crei uno schema (vedi il file)
+import "./zod-config"
 import React from "react"
 import ReactDOM from "react-dom/client"
 import { MantineProvider } from "@mantine/core"
@@ -7,12 +9,6 @@ import { BrowserRouter } from "react-router-dom"
 import { brandCssVariables, mantineTheme } from "./theme"
 import AppRoutes from "./AppRoutes"
 import { store } from "./store"
-import { z } from "zod"
-
-// Zod 4 per andare più veloce genera codice JavaScript a runtime (new Function) con lo spread negli oggetti: il bundle
-// legacy non lo può tradurre e la WebView vecchia dei kiosk si ferma con "Unexpected token" alla prima validazione
-// (i reparti, 30/10/2026). Senza JIT Zod usa il percorso normale, già tradotto dal bundle legacy.
-z.config({ jitless: true })
 
 // Prima i token del brand (copia identica di casa-del-formaggio-brand/tokens.css), poi Mantine
 import "./styles/brand-tokens.css"

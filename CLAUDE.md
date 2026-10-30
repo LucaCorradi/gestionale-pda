@@ -89,8 +89,10 @@ Il frontend in sviluppo chiama `http(s)://<host da cui si apre la pagina>:8787/a
 - **Palmari datati**: la WebView del contenitore kiosk di un palmare non regge nemmeno il bundle legacy; la soluzione
   scelta dall'utente è usare Chrome. Con HTTPS su `pda.lacdf.it` un Android molto vecchio potrebbe rifiutare il certificato:
   prima domanda "kiosk o Chrome?", poi eventualmente `http://pda.cdf` per quel dispositivo.
-  `z.config({ jitless: true })` in `main.tsx` non va tolto: senza, Zod genera codice a runtime con lo spread negli oggetti
-  che il bundle legacy non traduce, e la WebView del kiosk si ferma su "Unexpected token" / "Nessun reparto disponibile".
+  `src/zod-config.ts` (`z.config({ jitless: true })`, **primo import** di `main.tsx`) non va tolto né spostato: senza, Zod
+  genera codice a runtime con lo spread negli oggetti che il bundle legacy non traduce, e la WebView del kiosk si ferma su
+  "Unexpected token ..." / "Nessun reparto disponibile". Zod legge l'opzione quando crea lo schema: chiamata dopo gli
+  import non serve a niente (primo tentativo fallito così, 30/10/2026).
 - **Web app installabile** (dal 19/10/2026): `public/manifest.webmanifest`, icone `icona-192/512.png` e `apple-touch-icon.png`
   (pittogramma cacao del brand su avorio), `public/sw.js` registrato in `main.tsx` solo in produzione. Il service worker
   **non mette in cache niente** di proposito: una cache terrebbe i palmari sulla versione vecchia dopo un aggiornamento.
