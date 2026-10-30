@@ -92,7 +92,8 @@ Il frontend in sviluppo chiama `http(s)://<host da cui si apre la pagina>:8787/a
 - **Web app installabile** (dal 19/10/2026): `public/manifest.webmanifest`, icone `icona-192/512.png` e `apple-touch-icon.png`
   (pittogramma cacao del brand su avorio), `public/sw.js` registrato in `main.tsx` solo in produzione. Il service worker
   **non mette in cache niente** di proposito: una cache terrebbe i palmari sulla versione vecchia dopo un aggiornamento.
-  Si installa solo in HTTPS (`pda.lacdf.it`).
+  Si installa solo in HTTPS (`pda.lacdf.it`). **Nessun gestore `fetch`**, nemmeno vuoto: nella WebView dei kiosk faceva
+  fallire tutte le chiamate all'API ("Errore durante il fetch dei reparti"), mentre Chrome funzionava (30/10/2026).
 - Campi di testo a 16 px sui touch (iPhone ingrandisce la pagina sotto quella misura) e `interactive-widget=resizes-content`
   nel viewport: non toglierli.
 
