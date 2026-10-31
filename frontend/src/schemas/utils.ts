@@ -11,7 +11,7 @@ export type OperationTypeName = typeof OperationTypeName[keyof typeof OperationT
 // sul palmare si usa il linguaggio della cucina (richiesta del titolare, 31/10/2026)
 const etichetteOperazione: Record<OperationTypeName, string> = {
     [OperationTypeName.MOVIMENTA_SCARICO]: "Prendo per usare",
-    [OperationTypeName.MOVIMENTA_CARICO]: "Ho prodotto",
+    [OperationTypeName.MOVIMENTA_CARICO]: "Carico un piatto che ho fatto",
     [OperationTypeName.SPOSTAMENTO_MAGAZZINO]: "Spostamento magazzino",
     [OperationTypeName.CARICO_FORNITORE]: "Carico fornitore",
 }
