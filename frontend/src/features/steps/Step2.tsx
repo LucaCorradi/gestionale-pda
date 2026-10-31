@@ -13,6 +13,7 @@ import WizardStepContainer from "../../components/WizardStepContainer"
 import NavigationButtons from "../../components/NavigationButtons"
 import AreaScorrevole from "../../components/AreaScorrevole"
 import AvvisoPagina from "../../components/AvvisoPagina"
+import { etichettaOperazione } from "../../schemas/utils"
 
 
 export default function Step2() {
@@ -106,7 +107,7 @@ export default function Step2() {
                             <Radio.Card className="radiocard__root" key={opType.ID} value={String(opType.ID)} radius="md">
                                 <Group wrap="nowrap" align="flex-start">
                                     <Radio.Indicator />
-                                    <Text className="radiocard__text">{opType.Name}</Text>
+                                    <Text className="radiocard__text">{etichettaOperazione(opType.Name)}</Text>
                                 </Group>
                             </Radio.Card>
                         ))}

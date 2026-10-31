@@ -13,6 +13,7 @@ import { useDisclosure } from "@mantine/hooks"
 import { LuCheck } from "react-icons/lu"
 import ProductsTable from "../../components/ProductsTable"
 import AreaScorrevole from "../../components/AreaScorrevole"
+import { etichettaOperazione } from "../../schemas/utils"
 
 export default function Summary() {
     const [posting, setPosting] = useState<boolean>(false)
@@ -115,7 +116,7 @@ export default function Summary() {
                             {op && (
                                 <Stack gap={0}>
                                     <Text size="xs" c="dimmed" fw={600}>Operazione</Text>
-                                    <Text>{op.Name}</Text>
+                                    <Text>{etichettaOperazione(op.Name)}</Text>
                                 </Stack>
                             )}
 

@@ -7,7 +7,7 @@ import { OperationDetailResponse } from '../schemas/operationDetailSchema';
 import { PassepartoutHandler } from '../utils/passepartout/passepartoutHandler';
 import { OperationConfirmRequest } from '../schemas/operationConfirmSchema';
 import { dataSource } from '../../appDataSource';
-import { LessThan, Not } from 'typeorm';
+import { In, LessThan, Not } from 'typeorm';
 
 const operationRules: Record<OperationTypeName, (keyof OperationDetailResponse)[]> = {
 	[OperationTypeName.MOVIMENTA_SCARICO]: ["Employees", "WarehousesFrom"],
@@ -43,9 +43,10 @@ export class OperationService {
 				Departments: {
 					ID: departmentID
 				},
-				// Il carico da fornitore ora arriva in Passepartout dalle fatture (gestionale-fatture): tolto dal palmare per
-				// non caricare due volte la stessa merce. Resta nel database: per rimetterlo basta togliere questa riga.
-				Name: Not(OperationTypeName.CARICO_FORNITORE)
+				// Tolti dal palmare, restano nel database: per rimetterne uno basta toglierlo da questo elenco.
+				// - carico da fornitore: arriva in Passepartout dalle fatture (gestionale-fatture), non va caricato due volte;
+				// - spostamento di magazzino: nascosto per ora (decisione del titolare, 31/10/2026).
+				Name: Not(In([OperationTypeName.CARICO_FORNITORE, OperationTypeName.SPOSTAMENTO_MAGAZZINO]))
 			}
 		});
 	}

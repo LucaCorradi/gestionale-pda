@@ -78,7 +78,11 @@ Il frontend in sviluppo chiama `http(s)://<host da cui si apre la pagina>:8787/a
 - **Nomi dei magazzini**: il client SOAP li restituisce senza spazi finali, ma in Passepartout c'è "MAGAZZINO " con lo spazio.
   Per giacenze e inventari si usa il nome esatto (`PassepartoutHandler.exactWarehouseName`).
 - **Carico fornitore** tolto dalle operazioni quotidiane (filtro in `operationService.getOperationTypesByDepartmentID`): ora arriva
-  dalle fatture con gestionale-fatture. Resta nel database.
+  dalle fatture con gestionale-fatture. Resta nel database. Dal 31/10/2026 nello stesso filtro anche lo **spostamento di
+  magazzino**, nascosto per ora.
+- **Scritte delle operazioni** (31/10/2026): sul palmare "Movimenta Scarico" si legge **"Prendo per usare"** e "Movimenta
+  Carico" **"Ho prodotto"** (`etichettaOperazione` in `frontend/src/schemas/utils.ts`). Il nome nel database non cambia:
+  è quello che il backend usa per scegliere il documento in Passepartout.
 - L'API **non ha autenticazione**: deve restare raggiungibile solo dalla VPN (DNS sull'IP interno, porta su 127.0.0.1).
 - `/api/health` controlla solo il DB del PDA; le altre rotte passano da `databaseMiddleware`, che pretende **tutti e tre** i
   database: se Passepartout o Telenet non rispondono, falliscono tutte le chiamate (comportamento voluto da prima, da
